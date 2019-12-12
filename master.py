@@ -2,7 +2,7 @@ from skimage import io
 import matplotlib.pyplot as plt
 
 from tree_extraction import extract_crowns_from_dhm
-from neighborhood_funcs import compose_neighborhoods
+from neighborhood_funcs import compose_neighborhoods, compare_scatters, in_hull
 
 """
 Thoughts:
@@ -39,3 +39,7 @@ for tree in tree_pts:
     ax.add_patch(c)
 ax.set_axis_off()
 plt.show()
+
+s2 = neighborhoods[2]['coords']
+s1 = neighborhoods[3]['coords']
+a = compare_scatters(s1, s2)

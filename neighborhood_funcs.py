@@ -1,4 +1,8 @@
 import scipy.spatial
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.spatial.distance import cdist
+from scipy.optimize import linear_sum_assignment
 
 
 def get_neighbors(pt_coords, radius):
@@ -68,26 +72,90 @@ def compose_neighborhoods(pt_coords, radius):
     Returns:
         A list dictionaries with two keys each: 'neighbors' and 'coords'
             neighbors: a list of indices indicating which points are in the neighborhood
-            coords: relative x-y coordinates corresponding to each neighbor
+            coords: relative x-y coordinates corresponding to each neighbor as np array
 
     """
     neighbors = get_neighbors(pt_coords, radius)
     coords = compute_relative_positions(pt_coords, neighbors)
 
-    return [{'neighbors': n, 'coords': c}
+    return [{'neighbors': n, 'coords': np.array(c)}
             for n, c in
             zip(neighbors, coords)]
 
 
-def score_scatters(s1, s2):
+def score_distance(d, ka, coop=1):
     """
-    Compares to arrays of x-y coords and returns the average distance between the best pairs
-    of points found. Different penalization options are available for unpaired points.
+    Given some distance d, returns a score on (0,1]. A d of 0 scores 0, and a d of inf scores 1.
+    gamma defines the distance at which the score is 0.5. Modeled off the Hill equation
+
+    Args:
+        d: The value to score
+        ka: The value at which the score is 0.5
+        cooperativity: the cooperativity coeffient
+
+    Returns:
+        float
+
+    """
+    score = d**coop / (ka**coop + d**coop)
+    return score
+
+
+def compare_scatters(s1, s2):
+    """
+    Compares two arrays of x-y coords a score that quantifies their similarity.
+    Different penalization options are available for unpaired points.
 
     Args:
         s1:
         s2:
 
     Returns:
+        ???
 
     """
+    swapped = False
+    if len(s1) > len(s2):
+        s1, s2 = s2, s1
+        swapped = True
+
+    C = cdist(s1, s2)
+    _, assignment = linear_sum_assignment(C)
+
+    #  some points in s2 may not be matched. We need to exclude them from the convex hull
+    assigned_coords = [s2[i] for i in assignment]
+    assigned_coords.extend(s1) # we know all of s1 is matched because its length is always < s2
+    assigned_coords = np.array(assigned_coords)
+    hull = scipy.spatial.ConvexHull(assigned_coords)
+
+    plt.plot(s1[:, 0], s1[:, 1], 'bo', markersize=10)
+    plt.plot(s2[:, 0], s2[:, 1], 'rs', markersize=7)
+    for p in range(min([len(s1),len(s2)])):
+        try:
+            plt.plot([s1[p, 0], s2[assignment[p], 0]], [s1[p, 1], s2[assignment[p], 1]], 'k')
+        except IndexError:
+            pass
+    plt.axes().set_aspect('equal')
+    for simplex in hull.simplices:
+        plt.plot(assigned_coords[simplex, 0], assigned_coords[simplex, 1], 'k-', color='red')
+    plt.show()
+
+    return hull
+
+
+def in_hull(p, hull):
+    """
+    Test if points in `p` are in `hull`
+
+    `p` should be a `NxK` coordinates of `N` points in `K` dimensions
+    `hull` is either a scipy.spatial.Delaunay object or the `MxK` array of the
+    coordinates of `M` points in `K`dimensions for which Delaunay triangulation
+    will be computed
+
+    Courtesy Juh_ on StackOverFlow
+    """
+    from scipy.spatial import Delaunay
+    if not isinstance(hull,Delaunay):
+        hull = Delaunay(hull)
+
+    return hull.find_simplex(p)>=0
