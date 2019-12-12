@@ -2,7 +2,7 @@ from skimage import io
 import matplotlib.pyplot as plt
 
 from tree_extraction import extract_crowns_from_dhm
-from neighborhood_funcs import compose_neighborhoods, compare_scatters, in_hull
+from neighborhood_funcs import compose_neighborhoods, compare_scatters, score_comparison
 
 """
 Thoughts:
@@ -40,6 +40,8 @@ for tree in tree_pts:
 ax.set_axis_off()
 plt.show()
 
-s1 = neighborhoods[30]['coords']
+s1 = neighborhoods[60]['coords']
 s2 = neighborhoods[50]['coords']
-a = compare_scatters(s1, s2, True)
+
+comp = compare_scatters(s1, s2, True)
+score = score_comparison(comp, 20, coop=4, punishment=1, punish_out_of_hull=False)

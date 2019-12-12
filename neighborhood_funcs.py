@@ -89,6 +89,32 @@ def compose_neighborhoods(pt_coords, radius):
             zip(neighbors, coords)]
 
 
+def score_comparison(comp_dict, ka, coop=1, punishment=1, punish_out_of_hull=False):
+    """
+    Returns a similarity score for the comparison between two scatters produced by
+    compare_scatters(). A 0 is perfectly similar, while a 1 is maximally dissimilar
+
+    Args:
+        comp_dict: the comparison dictionary returned by compare_scatters
+        ka: the deviation at which a score of 0.5 is assigned
+        coop: the cooperativity coefficient of the scoring curve
+        punishment: the score assigned to unmatched points
+        punish_out_of_hull: whether unmatched points that fall outside the hull should be punished
+
+    Returns:
+        A float between 0 and 1.
+
+    """
+    deviation_scores = [score_distance(d, ka, coop) for d in comp_dict['deviations']]
+    if punish_out_of_hull:
+        punish_scores = [punishment for i in range(comp_dict['n_unpaired'])]
+    else:
+        punish_scores = [punishment for i in range(comp_dict['n_unpaired_in_hull'])]
+
+    deviation_scores.extend(punish_scores)
+
+    return np.mean(deviation_scores)
+
 def score_distance(d, ka, coop=1):
     """
     Given some distance d, returns a score on (0,1]. A d of 0 scores 0, and a d of inf scores 1.
