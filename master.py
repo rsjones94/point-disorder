@@ -40,6 +40,6 @@ for tree in tree_pts:
 ax.set_axis_off()
 plt.show()
 
-s2 = neighborhoods[2]['coords']
-s1 = neighborhoods[3]['coords']
-a = compare_scatters(s1, s2)
+s1 = neighborhoods[30]['coords']
+s2 = neighborhoods[50]['coords']
+a = compare_scatters(s1, s2, True)

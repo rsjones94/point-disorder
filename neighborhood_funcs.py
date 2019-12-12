@@ -1,8 +1,14 @@
+import math
+
 import scipy.spatial
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.spatial.distance import cdist
 from scipy.optimize import linear_sum_assignment
+
+
+def distance(p0, p1):
+    return math.sqrt((p0[0] - p1[0]) ** 2 + (p0[1] - p1[1]) ** 2)
 
 
 def get_neighbors(pt_coords, radius):
@@ -97,21 +103,20 @@ def score_distance(d, ka, coop=1):
         float
 
     """
-    score = d**coop / (ka**coop + d**coop)
+    score = d ** coop / (ka ** coop + d ** coop)
     return score
 
 
-def compare_scatters(s1, s2):
+def compare_scatters(s1, s2, plot=False):
     """
     Compares two arrays of x-y coords a score that quantifies their similarity.
-    Different penalization options are available for unpaired points.
 
     Args:
-        s1:
-        s2:
+        s1: the first set of points as a numpy array
+        s2: the second set of points as a numpy array
 
     Returns:
-        ???
+        A dictionary summarizing the results
 
     """
     swapped = False
@@ -124,23 +129,38 @@ def compare_scatters(s1, s2):
 
     #  some points in s2 may not be matched. We need to exclude them from the convex hull
     assigned_coords = [s2[i] for i in assignment]
-    assigned_coords.extend(s1) # we know all of s1 is matched because its length is always < s2
+    unpaired_cords = [s for i, s in enumerate(s2) if i not in assignment]
+    assigned_coords.extend(s1)  # we know all of s1 is matched because its length is always < s2
     assigned_coords = np.array(assigned_coords)
     hull = scipy.spatial.ConvexHull(assigned_coords)
+    unpaired_cords_in_hull = [s for s in unpaired_cords if in_hull(s, hull.points)]
 
-    plt.plot(s1[:, 0], s1[:, 1], 'bo', markersize=10)
-    plt.plot(s2[:, 0], s2[:, 1], 'rs', markersize=7)
-    for p in range(min([len(s1),len(s2)])):
-        try:
-            plt.plot([s1[p, 0], s2[assignment[p], 0]], [s1[p, 1], s2[assignment[p], 1]], 'k')
-        except IndexError:
-            pass
-    plt.axes().set_aspect('equal')
-    for simplex in hull.simplices:
-        plt.plot(assigned_coords[simplex, 0], assigned_coords[simplex, 1], 'k-', color='red')
-    plt.show()
+    n_smaller = len(s1)
+    n_bigger = len(s2)
+    n_unpaired = len(unpaired_cords)
+    n_unpaired_in_hull = len(unpaired_cords_in_hull)
+    deviations = [distance(p, s2[assignment[i]]) for i, p in enumerate(s1)]
 
-    return hull
+    if plot:
+        plt.plot(s1[:, 0], s1[:, 1], 'bo', markersize=10)
+        plt.plot(s2[:, 0], s2[:, 1], 'rs', markersize=7)
+        for p in range(min([len(s1), len(s2)])):
+            try:
+                plt.plot([s1[p, 0], s2[assignment[p], 0]], [s1[p, 1], s2[assignment[p], 1]], 'k')
+            except IndexError:
+                pass
+        plt.axes().set_aspect('equal')
+        for simplex in hull.simplices:
+            plt.plot(assigned_coords[simplex, 0], assigned_coords[simplex, 1], 'k-', color='red')
+        plt.show()
+
+    ret_dict = {'n_smaller': n_smaller,
+                'n_bigger': n_bigger,
+                'n_unpaired': n_unpaired,
+                'n_unpaired_in_hull': n_unpaired_in_hull,
+                'deviations': deviations}
+
+    return ret_dict
 
 
 def in_hull(p, hull):
@@ -155,7 +175,7 @@ def in_hull(p, hull):
     Courtesy Juh_ on StackOverFlow
     """
     from scipy.spatial import Delaunay
-    if not isinstance(hull,Delaunay):
+    if not isinstance(hull, Delaunay):
         hull = Delaunay(hull)
 
-    return hull.find_simplex(p)>=0
+    return hull.find_simplex(p) >= 0
