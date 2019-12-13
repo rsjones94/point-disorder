@@ -58,3 +58,9 @@ for i, tree in enumerate(tree_pts):
     ax.add_patch(c)
 ax.set_axis_off()
 plt.show()
+fig.savefig('F:\entropy_veg\scored.png')
+
+fig, ax = plt.subplots(1, 1)
+ax.scatter(range(len(scores)),scores)
+plt.show()
+fig.savefig('F:\entropy_veg\scatter.png')
