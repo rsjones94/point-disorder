@@ -66,10 +66,15 @@ def rotate(array, theta):
 
 
 grid = generate_grid(10, 5, .2, .5)
-grid = translate(grid, 100, -30)
-grid = rotate(grid, 45)
+
+gridA = rotate(grid, 45)
+
+gridB = rotate(grid,-45)
+gridB = translate(gridB,5,0)
+
+total = np.append(gridA,gridB,0)
 
 fig, ax = plt.subplots(1, 1)
-ax.scatter(grid[:, 0], grid[:, 1])
+ax.scatter(total[:, 0], total[:, 1])
 ax.set_aspect('equal')
 plt.show()
