@@ -168,8 +168,12 @@ def compare_scatters(s1, s2, plot=False):
     deviations = [distance(p, s2[assignment[i]]) for i, p in enumerate(s1)]
 
     if plot:
-        plt.plot(s1[:, 0], s1[:, 1], 'bo', markersize=10)
-        plt.plot(s2[:, 0], s2[:, 1], 'rs', markersize=7)
+        if not swapped:
+            plt.plot(s1[:, 0], s1[:, 1], 'bo', markersize=10)
+            plt.plot(s2[:, 0], s2[:, 1], 'rs', markersize=7)
+        else:
+            plt.plot(s2[:, 0], s2[:, 1], 'bo', markersize=10)
+            plt.plot(s1[:, 0], s1[:, 1], 'rs', markersize=7)
         for p in range(min([len(s1), len(s2)])):
             try:
                 plt.plot([s1[p, 0], s2[assignment[p], 0]], [s1[p, 1], s2[assignment[p], 1]], 'k')

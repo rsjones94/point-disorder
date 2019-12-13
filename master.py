@@ -6,11 +6,21 @@ from neighborhood_funcs import compose_neighborhoods, compare_scatters, score_co
 
 """
 Thoughts:
-should allow some kind of rotational/scale/translational variation
+should allow some kind of scaling/rotation/translation/mirroring (affine), maybe even warping (non-affine)
+    BUT be aware that allowing unlimited transformation would probably result in cheating by
+    optimization heuristics
 ^ if above is paired with NOT penalizing unpaired points, then excess densification could cheat the measure
 Perhaps penalize unapaired points IFF they are within the convex hull of the paired points (which would
-discourage densification but not penalize edges)
+discourage densification but reduce edge penalization)
+
+ISSUE: Hungarian method minimizes total distance, NOT my scoring scheme
+    e.g., sometimes it is obvious that an overlapping pattern exists,
+    but is offset in a way s.t. the Hungarian matching
+    produces a strange matching scheme
 """
+
+compare_1 = 50
+compare_rel = 5
 
 neighbor_search_dist = 100
 im_xlim = (2500, 4000)
@@ -29,19 +39,35 @@ print('Extracting points')
 tree_pts = extract_crowns_from_dhm(sub_image_gray)
 print('Composing neighborhoods')
 neighborhoods = compose_neighborhoods(tree_pts[:,0:2], neighbor_search_dist)
+compare_2 = neighborhoods[compare_1]['neighbors'][compare_rel]
 
 fig, ax = plt.subplots(1, 1)
 ax.imshow(sub_image_gray)
 print('Drawing')
-for tree in tree_pts:
+for i,tree in enumerate(tree_pts):
     x, y, r = tree
-    c = plt.Circle((x, y), r, color='red', linewidth=1, fill=False)
+    if i == compare_1:
+        fill = True
+        r *= 3
+        color = 'blue'
+        print(f'FILLING 1 AT {x,y,r}')
+    elif i == compare_2:
+        fill = True
+        r *= 3
+        color = 'orange'
+        print(f'FILLING 2 AT {x,y,r}')
+    else:
+        fill = False
+        color = 'red'
+    c = plt.Circle((x, y), r, color=color, linewidth=1, fill=fill)
     ax.add_patch(c)
+
 ax.set_axis_off()
 plt.show()
 
-s1 = neighborhoods[60]['coords']
-s2 = neighborhoods[50]['coords']
+s1 = neighborhoods[compare_1]['coords']
+s2 = neighborhoods[compare_2]['coords']
 
 comp = compare_scatters(s1, s2, True)
-score = score_comparison(comp, 20, coop=4, punishment=1, punish_out_of_hull=False)
+score = score_comparison(comp, ka=neighbor_search_dist/10, coop=3, punishment=1, punish_out_of_hull=False)
+print(f'Score: {score}')
