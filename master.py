@@ -1,8 +1,11 @@
 from skimage import io
 import matplotlib.pyplot as plt
+from matplotlib import cm
+import numpy as np
 
 from tree_extraction import extract_crowns_from_dhm
-from neighborhood_funcs import compose_neighborhoods, compare_scatters, score_comparison
+from neighborhood_funcs import *
+from comparison import BidirectionalDict
 
 """
 Thoughts:
@@ -18,9 +21,6 @@ ISSUE: Hungarian method minimizes total distance, NOT my scoring scheme
     but is offset in a way s.t. the Hungarian matching
     produces a strange matching scheme
 """
-
-compare_1 = 50
-compare_rel = 5
 
 neighbor_search_dist = 100
 im_xlim = (2500, 4000)
@@ -38,36 +38,23 @@ sub_image_gray = image_gray[im_xlim[0]:im_xlim[1], im_ylim[0]:im_ylim[1]]
 print('Extracting points')
 tree_pts = extract_crowns_from_dhm(sub_image_gray)
 print('Composing neighborhoods')
-neighborhoods = compose_neighborhoods(tree_pts[:,0:2], neighbor_search_dist)
-compare_2 = neighborhoods[compare_1]['neighbors'][compare_rel]
+neighborhoods = compose_neighborhoods(tree_pts[:, 0:2], neighbor_search_dist)
+print('Generating comparison keys and scoring')
+scatter_key = generate_scatter_key(neighborhoods)
+score_key = generate_score_key(scatter_key, neighbor_search_dist/10, coop=3)
+scores = score_points(neighborhoods, score_key)
 
 fig, ax = plt.subplots(1, 1)
-ax.imshow(sub_image_gray)
+ax.imshow(sub_image_gray, cmap='gray')
 print('Drawing')
-for i,tree in enumerate(tree_pts):
+color_map = cm.get_cmap('plasma')
+for i, tree in enumerate(tree_pts):
     x, y, r = tree
-    if i == compare_1:
-        fill = True
-        r *= 3
-        color = 'blue'
-        print(f'FILLING 1 AT {x,y,r}')
-    elif i == compare_2:
-        fill = True
-        r *= 3
-        color = 'orange'
-        print(f'FILLING 2 AT {x,y,r}')
-    else:
-        fill = False
-        color = 'red'
-    c = plt.Circle((x, y), r, color=color, linewidth=1, fill=fill)
+    raw_col = scores[i]
+    col = color_map(scores[i])
+    if np.isnan(raw_col):
+        col = 'dodgerblue'
+    c = plt.Circle((x, y), r, color=col, linewidth=1, fill=True)
     ax.add_patch(c)
-
 ax.set_axis_off()
 plt.show()
-
-s1 = neighborhoods[compare_1]['coords']
-s2 = neighborhoods[compare_2]['coords']
-
-comp = compare_scatters(s1, s2, True)
-score = score_comparison(comp, ka=neighbor_search_dist/10, coop=3, punishment=1, punish_out_of_hull=False)
-print(f'Score: {score}')

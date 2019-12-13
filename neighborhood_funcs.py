@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 from scipy.spatial.distance import cdist
 from scipy.optimize import linear_sum_assignment
 
+from comparison import BidirectionalDict
+
 
 def distance(p0, p1):
     return math.sqrt((p0[0] - p1[0]) ** 2 + (p0[1] - p1[1]) ** 2)
@@ -115,6 +117,7 @@ def score_comparison(comp_dict, ka, coop=1, punishment=1, punish_out_of_hull=Fal
 
     return np.mean(deviation_scores)
 
+
 def score_distance(d, ka, coop=1):
     """
     Given some distance d, returns a score on (0,1]. A d of 0 scores 0, and a d of inf scores 1.
@@ -158,8 +161,12 @@ def compare_scatters(s1, s2, plot=False):
     unpaired_cords = [s for i, s in enumerate(s2) if i not in assignment]
     assigned_coords.extend(s1)  # we know all of s1 is matched because its length is always < s2
     assigned_coords = np.array(assigned_coords)
-    hull = scipy.spatial.ConvexHull(assigned_coords)
-    unpaired_cords_in_hull = [s for s in unpaired_cords if in_hull(s, hull.points)]
+    try:
+        hull = scipy.spatial.ConvexHull(assigned_coords)
+        unpaired_cords_in_hull = [s for s in unpaired_cords if in_hull(s, hull.points)]
+    except scipy.spatial.qhull.QhullError:
+        hull = None
+        unpaired_cords_in_hull = unpaired_cords
 
     n_smaller = len(s1)
     n_bigger = len(s2)
@@ -209,3 +216,71 @@ def in_hull(p, hull):
         hull = Delaunay(hull)
 
     return hull.find_simplex(p) >= 0
+
+
+def generate_scatter_key(neighborhoods):
+    """
+    Create a BidirectionalDict object where each key relates the neighborhoods of two points.
+    A key i,j is only generated if i and j are in one another's neighborhood.
+
+    Args:
+        neighborhoods: a list where each entry is a dict with keys for point indices and coordinates
+
+    Returns:
+        BidirectionalDict
+
+    """
+    result = BidirectionalDict()
+    for i, d in enumerate(neighborhoods):
+        print(f'Generating comparisons for {i} (n={len(d["neighbors"])})')
+        for j in d['neighbors']:
+            if (i, j) not in result:
+                result[i, j] = compare_scatters(neighborhoods[i]['coords'],
+                                                neighborhoods[j]['coords'])
+
+    return result
+
+
+def generate_score_key(scatter_key, ka, coop=1, punishment=1, punish_out_of_hull=False):
+    """
+    Scores a scatter key
+
+    Args:
+        scatter_key: a scatter key
+
+    Returns:
+        Bidirectional dict of scored scatter relations
+
+    """
+    score_key = BidirectionalDict({key: score_comparison(val,
+                                                         ka=ka,
+                                                         coop=coop,
+                                                         punishment=punishment,
+                                                         punish_out_of_hull=punish_out_of_hull)
+                                   for key, val in scatter_key.items()})
+    return score_key
+
+
+def score_points(neighborhoods, score_key):
+    """
+    Scores all input points using the bidirectional score key. If a point has no neighbors, it gets np.nan
+
+    Args:
+        neighborhoods:
+        score_key:
+
+    Returns:
+        A list representing the score at each index
+
+    """
+    scores = []
+    for i, n in enumerate(neighborhoods):
+        sub = []
+        for j in n['neighbors']:
+            sub.append(score_key[i, j])
+        if sub:
+            scores.append(np.mean(sub))
+        else:
+            scores.append(np.nan)
+
+    return scores
