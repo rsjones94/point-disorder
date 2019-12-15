@@ -39,7 +39,7 @@ if use_dhm:
     punishment = 1
     punish_out_of_hull = False
 else:
-    neighbor_search_dist = 25
+    neighbor_search_dist = 10
     ka = 2
     coop = 5
     punishment = 1
@@ -68,6 +68,7 @@ if use_dhm:
 
     print('Extracting points')
     pts = extract_crowns_from_dhm(sub_image_gray)
+    d = [(x**2 + y**2)**0.5 for x, y in pts]
 else:
     grid_base = generate_grid(80, 80, 3, 3)
 
@@ -79,17 +80,36 @@ else:
 
     # pts = np.append(gridA, gridB, 0)
     pts = gridA
-    intensity = [(x**2 + y**2)**0.5 / 40 for x, y in pts]
-    pts = np.array([[pt[0] + np.random.normal(pt[0], intensity[i]),
-                     pt[1] + np.random.normal(pt[1], intensity[i])] for i,pt in enumerate(pts)])
+    d = [(x**2 + y**2)**0.5 for x, y in pts]
+    intensity = [di / 40 for di in d]
+
+    """
+    pts = np.array([[np.random.normal(pt[0], intensity[i]),
+                     np.random.normal(pt[1], intensity[i])] for i,pt in enumerate(pts)])
+    """
+
+    pt_copy = []
+    for i,(pt,di) in enumerate(zip(pts,d)):
+        if di > 50:
+            adder = [np.random.normal(pt[0], 2),
+                     np.random.normal(pt[1], 2)]
+        else:
+            adder = pt
+        pt_copy.append(adder)
+    pts = np.array(pt_copy)
+
+
     #pts = rotate(pts, 45)
     # pts = np.random.normal(pts,intensity)
     np.random.shuffle(pts)
-    keep = int(len(pts)*0.8)
+    keep = int(len(pts)*0.9)
     ptc = []
+    new_d = []
     for i in range(keep):
         ptc.append(pts[i])
+        new_d.append(d[i])
     pts = np.array(ptc)
+    d = new_d
 
 
 scores, neighborhoods, scatter_key, score_key = point_disorder_index(pts[:, 0:2],
@@ -117,7 +137,7 @@ else:
     ax.scatter(pts[:, 0], pts[:, 1], c=scores, cmap=color_map, vmin=0, vmax=1, edgecolors='black')
 ax.set_aspect('equal')
 plt.show()
-fig.savefig('F:\entropy_veg\scored_synthetic.png')
+fig.savefig('F:\entropy_veg\scored_synthetic_wall.png')
 
 """
 ptn = 1319
@@ -125,7 +145,6 @@ for neighbor in neighborhoods[ptn]['neighbors']:
     compare_scatters(neighborhoods[ptn]['coords'],neighborhoods[neighbor]['coords'],'True')
 """
 if not use_dhm:
-    d = [(x**2 + y**2)**0.5 for x, y in pts]
     fig, ax = plt.subplots(1, 2)
     ax[0].scatter(pts[:, 0], pts[:, 1], c=scores, cmap=color_map, vmin=0, vmax=1, edgecolors='black')
     ax[0].set_aspect('equal')
