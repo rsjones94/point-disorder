@@ -143,6 +143,7 @@ def compare_scatters(s1, s2, plot=False):
     Args:
         s1: the first set of points as a numpy array
         s2: the second set of points as a numpy array
+        plot: whether to plot the result
 
     Returns:
         A dictionary summarizing the results
@@ -181,14 +182,19 @@ def compare_scatters(s1, s2, plot=False):
         else:
             plt.plot(s2[:, 0], s2[:, 1], 'bo', markersize=10)
             plt.plot(s1[:, 0], s1[:, 1], 'rs', markersize=7)
+        try:
+            for simplex in hull.simplices:
+                plt.plot(assigned_coords[simplex, 0], assigned_coords[simplex, 1], 'k-', color='red', lw=2)
+        except AttributeError:
+            pass
         for p in range(min([len(s1), len(s2)])):
             try:
                 plt.plot([s1[p, 0], s2[assignment[p], 0]], [s1[p, 1], s2[assignment[p], 1]], 'k')
             except IndexError:
                 pass
         plt.axes().set_aspect('equal')
-        for simplex in hull.simplices:
-            plt.plot(assigned_coords[simplex, 0], assigned_coords[simplex, 1], 'k-', color='red')
+        plt.title(f'Mean deviation: {round(np.mean(deviations),2)}\n'
+                  f'Unpaired: {n_unpaired} ({n_unpaired_in_hull} in hull)')
         plt.show()
 
     ret_dict = {'n_smaller': n_smaller,
@@ -231,8 +237,9 @@ def generate_scatter_key(neighborhoods):
 
     """
     result = BidirectionalDict()
+    n_hoods = len(neighborhoods)
     for i, d in enumerate(neighborhoods):
-        print(f'Generating comparisons for {i} (n={len(d["neighbors"])})')
+        print(f'Generating comparisons for {i} of {n_hoods} (n={len(d["neighbors"])})')
         for j in d['neighbors']:
             if (i, j) not in result:
                 result[i, j] = compare_scatters(neighborhoods[i]['coords'],
@@ -284,3 +291,37 @@ def score_points(neighborhoods, score_key):
             scores.append(np.nan)
 
     return scores
+
+
+def point_disorder_index(pts, neighborhood_radius, ka=None, coop=1,
+                   punishment=1, punish_out_of_hull=False):
+    """
+    Generates the quantified point disorder index for a list of points
+
+    Args:
+        pts: a numpy array of points, where each entry is (x,y)
+        neighborhood_radius: the radius of the neighborhood
+        ka: the deviation distance at which a score of 0.5 is assigned. If not specified,
+            neighborhood_radius / 10 is used
+        coop: the cooperativity of the scoring curve
+        punishment: the score assigned to unpaired points
+        punish_out_of_hull: a boolean indicating whether unpaired points outside the
+            convex hull should be punished.
+
+    Returns:
+        A list of disorder scores for the input points
+    """
+    if not ka:
+        ka = neighborhood_radius / 10
+    print('Composing neighborhoods')
+    neighborhoods = compose_neighborhoods(pts, neighborhood_radius)
+    print('Generating comparison keys')
+    scatter_key = generate_scatter_key(neighborhoods)
+    print('Scoring')
+    score_key = generate_score_key(scatter_key,
+                                   ka=ka,
+                                   coop=coop,
+                                   punishment=punishment,
+                                   punish_out_of_hull=punish_out_of_hull)
+    scores = score_points(neighborhoods, score_key)
+    return scores, neighborhoods, scatter_key, score_key
