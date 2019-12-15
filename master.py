@@ -26,7 +26,7 @@ What if we extended the idea of Haralick textures to vectors? We could build
 a "GLCM" but for a point cloud instead of rasters. "directionality" to disorder
 """
 
-use_dhm = True
+use_dhm = False
 
 if use_dhm:
     im_xlim = (2000, 5000)
@@ -39,7 +39,7 @@ if use_dhm:
     punishment = 1
     punish_out_of_hull = False
 else:
-    neighbor_search_dist = 20
+    neighbor_search_dist = 25
     ka = 2
     coop = 5
     punishment = 1
@@ -84,6 +84,13 @@ else:
                      pt[1] + np.random.normal(pt[1], intensity[i])] for i,pt in enumerate(pts)])
     #pts = rotate(pts, 45)
     # pts = np.random.normal(pts,intensity)
+    np.random.shuffle(pts)
+    keep = int(len(pts)*0.8)
+    ptc = []
+    for i in range(keep):
+        ptc.append(pts[i])
+    pts = np.array(ptc)
+
 
 scores, neighborhoods, scatter_key, score_key = point_disorder_index(pts[:, 0:2],
                                                                      neighbor_search_dist,
@@ -110,7 +117,7 @@ else:
     ax.scatter(pts[:, 0], pts[:, 1], c=scores, cmap=color_map, vmin=0, vmax=1, edgecolors='black')
 ax.set_aspect('equal')
 plt.show()
-#fig.savefig('F:\entropy_veg\scored.png')
+fig.savefig('F:\entropy_veg\scored_synthetic.png')
 
 """
 ptn = 1319
