@@ -70,7 +70,7 @@ if use_dhm:
     pts = extract_crowns_from_dhm(sub_image_gray)
     d = [(x**2 + y**2)**0.5 for x, y in pts]
 else:
-    grid_base = generate_grid(80, 80, 3, 3)
+    grid_base = generate_grid(80, 80, 6, 1.5)
 
     # gridA = rotate(grid_base, 45)
     gridA = grid_base
@@ -80,6 +80,9 @@ else:
 
     # pts = np.append(gridA, gridB, 0)
     pts = gridA
+    pts = np.array([[pt[0] + 1*math.sin(10*pt[1]),
+                    pt[1]] for i,pt in enumerate(pts)])
+
     d = [(x**2 + y**2)**0.5 for x, y in pts]
     intensity = [di / 40 for di in d]
 
@@ -101,6 +104,7 @@ else:
 
     #pts = rotate(pts, 45)
     # pts = np.random.normal(pts,intensity)
+    """
     np.random.shuffle(pts)
     keep = int(len(pts)*0.9)
     ptc = []
@@ -110,6 +114,8 @@ else:
         new_d.append(d[i])
     pts = np.array(ptc)
     d = new_d
+    """
+
 
 
 scores, neighborhoods, scatter_key, score_key = point_disorder_index(pts[:, 0:2],
@@ -137,16 +143,17 @@ else:
     ax.scatter(pts[:, 0], pts[:, 1], c=scores, cmap=color_map, vmin=0, vmax=1, edgecolors='black')
 ax.set_aspect('equal')
 plt.show()
-fig.savefig('F:\entropy_veg\scored_synthetic_wall.png')
+fig.savefig('F:\entropy_veg\scored_synthetic_wall_wavelines.png')
 
 """
 ptn = 1319
 for neighbor in neighborhoods[ptn]['neighbors']:
     compare_scatters(neighborhoods[ptn]['coords'],neighborhoods[neighbor]['coords'],'True')
-"""
+    
 if not use_dhm:
     fig, ax = plt.subplots(1, 2)
     ax[0].scatter(pts[:, 0], pts[:, 1], c=scores, cmap=color_map, vmin=0, vmax=1, edgecolors='black')
     ax[0].set_aspect('equal')
     ax[1].scatter(d, scores)
     plt.show()
+"""
