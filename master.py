@@ -25,15 +25,40 @@ ISSUE: Hungarian method minimizes total distance, NOT my scoring scheme
 What if we extended the idea of Haralick textures to vectors? We could build
 a "GLCM" but for a point cloud instead of rasters. "directionality" to disorder
 """
-neighbor_search_dist = 20
 
-use_dhm = False
-im_xlim = (2500, 4000)
-im_ylim = (500, 2000)
-im_path = r'F:\entropy_veg\lidar\las_products\USGS_LPC_TN_27County_blk2_2015_2276581SE_LAS_2017\USGS_LPC_TN_27County_blk2_2015_2276581SE_LAS_2017_dhm.tif'
+use_dhm = True
+
+if use_dhm:
+    im_xlim = (2000, 5000)
+    im_ylim = (0, 3000)
+    im_path = r'F:\entropy_veg\lidar\las_products\USGS_LPC_TN_27County_blk2_2015_2276581SE_LAS_2017\USGS_LPC_TN_27County_blk2_2015_2276581SE_LAS_2017_dhm.tif'
+
+    neighbor_search_dist = 100
+    ka = 10
+    coop = 4
+    punishment = 1
+    punish_out_of_hull = False
+else:
+    neighbor_search_dist = 20
+    ka = 2
+    coop = 5
+    punishment = 1
+    punish_out_of_hull = False
 
 ###############
-fig, ax = plt.subplots(1, 1)
+
+exes = np.linspace(0,100,1100)
+whys = [score_distance(x,ka,coop) for x in exes]
+plt.figure()
+plt.plot(exes,whys)
+plt.show()
+
+"""
+response = input("How's the response curve look?")
+if response not in ['good', 'Good', True, 'True', 1, 'fine', 'Fine']:
+    raise Exception
+"""
+
 if use_dhm:
     image_gray = io.imread(im_path)
     image_gray[image_gray > 500] = 0  # remove weird tall anomalies
@@ -43,7 +68,6 @@ if use_dhm:
 
     print('Extracting points')
     pts = extract_crowns_from_dhm(sub_image_gray)
-    ax.imshow(sub_image_gray, cmap='gray')
 else:
     grid_base = generate_grid(80, 80, 3, 3)
 
@@ -63,38 +87,40 @@ else:
 
 scores, neighborhoods, scatter_key, score_key = point_disorder_index(pts[:, 0:2],
                                                                      neighbor_search_dist,
-                                                                     ka=2,
-                                                                     coop=5,
-                                                                     punishment=1,
-                                                                     punish_out_of_hull=False)
+                                                                     ka=ka,
+                                                                     coop=coop,
+                                                                     punishment=punishment,
+                                                                     punish_out_of_hull=punish_out_of_hull)
 
 print('Drawing')
-color_map = cm.get_cmap('plasma')
+fig, ax = plt.subplots(1, 1)
+color_map = cm.get_cmap('RdYlGn_r')
 if use_dhm:
+    ax.imshow(sub_image_gray, cmap='gray')
     for i, tree in enumerate(pts):
         x, y, r = tree
         raw_col = scores[i]
         col = color_map(scores[i])
         if np.isnan(raw_col):
             col = 'dodgerblue'
-        c = plt.Circle((x, y), r, color=col, vmin=0, vmax=1, linewidth=1, fill=True)
+        c = plt.Circle((x, y), 5, color=col, linewidth=1, fill=True)
         ax.add_patch(c)
+        #ax.annotate(i, (x, y))
 else:
     ax.scatter(pts[:, 0], pts[:, 1], c=scores, cmap=color_map, vmin=0, vmax=1, edgecolors='black')
 ax.set_aspect('equal')
 plt.show()
-# fig.savefig('F:\entropy_veg\scored.png')
+#fig.savefig('F:\entropy_veg\scored.png')
 
 """
-ptn = 167
+ptn = 1319
 for neighbor in neighborhoods[ptn]['neighbors']:
     compare_scatters(neighborhoods[ptn]['coords'],neighborhoods[neighbor]['coords'],'True')
 """
-
-d = [(x**2 + y**2)**0.5 for x, y in pts]
-fig, ax = plt.subplots(1, 2)
-ax[0].scatter(pts[:, 0], pts[:, 1], c=scores, cmap=color_map, vmin=0, vmax=1, edgecolors='black')
-ax[0].set_aspect('equal')
-ax[1].scatter(d, scores)
-plt.show()
-
+if not use_dhm:
+    d = [(x**2 + y**2)**0.5 for x, y in pts]
+    fig, ax = plt.subplots(1, 2)
+    ax[0].scatter(pts[:, 0], pts[:, 1], c=scores, cmap=color_map, vmin=0, vmax=1, edgecolors='black')
+    ax[0].set_aspect('equal')
+    ax[1].scatter(d, scores)
+    plt.show()
