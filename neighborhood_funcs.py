@@ -4,9 +4,10 @@ import scipy.spatial
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.spatial.distance import cdist
-from scipy.optimize import linear_sum_assignment
+from scipy.optimize import linear_sum_assignment, differential_evolution
 
 from comparison import BidirectionalDict
+from pattern_generation import realign
 
 
 def distance(p0, p1):
@@ -136,7 +137,7 @@ def score_distance(d, ka, coop=1):
     return score
 
 
-def compare_scatters(s1, s2, plot=False):
+def compare_scatters(s1, s2, plot=False, distance_metric='euclidean'):
     """
     Compares two arrays of x-y coords a score that quantifies their similarity.
 
@@ -149,13 +150,17 @@ def compare_scatters(s1, s2, plot=False):
         A dictionary summarizing the results
 
     """
+    print('In comparison')
+
     swapped = False
     if len(s1) > len(s2):
         s1, s2 = s2, s1
         swapped = True
 
-    C = cdist(s1, s2)
+    print('Computing distances')
+    C = cdist(s1, s2, metric=distance_metric)
     _, assignment = linear_sum_assignment(C)
+    print('Assignments made')
 
     #  some points in s2 may not be matched. We need to exclude them from the convex hull
     assigned_coords = [s2[i] for i in assignment]
@@ -174,6 +179,10 @@ def compare_scatters(s1, s2, plot=False):
     n_unpaired = len(unpaired_cords)
     n_unpaired_in_hull = len(unpaired_cords_in_hull)
     deviations = [distance(p, s2[assignment[i]]) for i, p in enumerate(s1)]
+    if distance_metric is not 'euclidean':
+        scored_vals = [distance_metric(d) for d in deviations]
+    else:
+        scored_vals = deviations
 
     if plot:
         plt.figure()
@@ -194,7 +203,7 @@ def compare_scatters(s1, s2, plot=False):
             except IndexError:
                 pass
         plt.axes().set_aspect('equal')
-        plt.title(f'Mean deviation: {round(np.mean(deviations),2)}\n'
+        plt.title(f'Mean deviation: {round(np.mean(deviations), 2)}\n'
                   f'Unpaired: {n_unpaired} ({n_unpaired_in_hull} in hull)')
         plt.show()
 
@@ -202,7 +211,8 @@ def compare_scatters(s1, s2, plot=False):
                 'n_bigger': n_bigger,
                 'n_unpaired': n_unpaired,
                 'n_unpaired_in_hull': n_unpaired_in_hull,
-                'deviations': deviations}
+                'deviations': deviations,
+                'scored_vals': scored_vals}
 
     return ret_dict
 
@@ -225,7 +235,7 @@ def in_hull(p, hull):
     return hull.find_simplex(p) >= 0
 
 
-def generate_scatter_key(neighborhoods):
+def generate_scatter_key(neighborhoods, distance_metric='euclidean'):
     """
     Create a BidirectionalDict object where each key relates the neighborhoods of two points.
     A key i,j is only generated if i and j are in one another's neighborhood.
@@ -244,7 +254,9 @@ def generate_scatter_key(neighborhoods):
         for j in d['neighbors']:
             if (i, j) not in result:
                 result[i, j] = compare_scatters(neighborhoods[i]['coords'],
-                                                neighborhoods[j]['coords'])
+                                                neighborhoods[j]['coords'],
+                                                plot=False,
+                                                distance_metric=distance_metric)
 
     return result
 
@@ -295,7 +307,7 @@ def score_points(neighborhoods, score_key):
 
 
 def point_disorder_index(pts, neighborhood_radius, ka=None, coop=1,
-                   punishment=1, punish_out_of_hull=False):
+                         punishment=1, punish_out_of_hull=False, euclidean=True):
     """
     Generates the quantified point disorder index for a list of points
 
@@ -308,10 +320,17 @@ def point_disorder_index(pts, neighborhood_radius, ka=None, coop=1,
         punishment: the score assigned to unpaired points
         punish_out_of_hull: a boolean indicating whether unpaired points outside the
             convex hull should be punished.
+        euclidean: whether a euclidean distance metric should be used for bipartite graph analysis. If False,
+            the Hill equation will be used instead
 
     Returns:
         A list of disorder scores for the input points
     """
+    if not euclidean:
+        distance_metric = lambda d: score_distance(d, ka, coop)
+    else:
+        distance_metric = 'euclidean'
+
     if not ka:
         ka = neighborhood_radius / 10
     print('Composing neighborhoods')
@@ -326,3 +345,81 @@ def point_disorder_index(pts, neighborhood_radius, ka=None, coop=1,
                                    punish_out_of_hull=punish_out_of_hull)
     scores = score_points(neighborhoods, score_key)
     return scores, neighborhoods, scatter_key, score_key
+
+
+def score_realignment(s1, s2, realignment_params, distance_metric='euclidean'):
+    """
+    Computes the mean distance between s1 and a realigned s2
+
+    Args:
+        s1: the reference dataset
+        s2: data that is being realigned
+        realignment_params: realignment to apply to s2: tuple or list [theta, del_x, del_y, reflect]
+        distance_metric: the metric used to compute distance
+
+    Returns:
+        mean distance between paired points
+
+    """
+    print('Realigning for scoring...')
+    s2_rel = realign(s2,
+                     theta=realignment_params[0],
+                     del_x=realignment_params[1],
+                     del_y=realignment_params[2],
+                     to_reflect=realignment_params[3])
+    comparison = compare_scatters(s1, s2_rel, distance_metric=distance_metric)
+    result = np.mean(comparison['scored_vals'])
+    return result
+
+
+def mod_procrustes(s1, s2, translate=True, rotate=True, reflect=True, distance_metric='euclidean'):
+    """
+    Aligns s2 such that the distance between point-pairs is minimized. Modified Procrustes analysis
+
+    Args:
+        s1: a np array of points
+        s2: a np array of points
+        translate: whether translation is a valid realignment method
+        rotate: whether rotation is a valid realignment method
+        reflect: whether reflection is a valid realignment method
+        rescale: whether rescaling is a valid realignment method
+        distance_metric: the method used to evaluate distance. default is euclidean, otherwise a callable
+
+    Returns:
+        a tuple (realigned point set, optimal realignment params)
+
+    """
+
+    min_x_s1 = min(s1[:, 0])
+    min_x_s2 = min(s2[:, 0])
+    max_x_s1 = max(s1[:, 0])
+    max_x_s2 = max(s1[:, 0])
+    xdif = (max(max_x_s1, max_x_s2) - min(min_x_s1, min_x_s2))
+
+    min_y_s1 = min(s1[:, 1])
+    min_y_s2 = min(s2[:, 1])
+    max_y_s1 = max(s1[:, 1])
+    max_y_s2 = max(s1[:, 1])
+    ydif = (max(max_y_s1, max_y_s2) - min(min_y_s1, min_y_s2))
+
+    del_x_lim = (0, xdif)
+    del_y_lim = (0, ydif)
+    theta_lim = (0, 360)
+    reflect_lim = (0, 1)
+
+    print(theta_lim, del_x_lim, del_y_lim, reflect_lim)
+
+    objective = lambda realignment: score_realignment(s1, s2, realignment, distance_metric)
+    result = scipy.optimize.differential_evolution(objective,
+                                                   (theta_lim, del_x_lim, del_y_lim,
+                                                    reflect_lim),
+                                                   maxiter=3)
+
+    optimal_realignment_parameters = result.x
+    optimal_set = realign(s2,
+                          optimal_realignment_parameters[0],
+                          optimal_realignment_parameters[1],
+                          optimal_realignment_parameters[2],
+                          optimal_realignment_parameters[3])
+
+    return optimal_set, optimal_realignment_parameters

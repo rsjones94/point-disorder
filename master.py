@@ -5,8 +5,8 @@ import numpy as np
 
 from tree_extraction import extract_crowns_from_dhm
 from neighborhood_funcs import *
-from comparison import BidirectionalDict
 from pattern_generation import *
+from comparison import BidirectionalDict
 
 """
 Thoughts:
@@ -39,7 +39,7 @@ if use_dhm:
     punishment = 1
     punish_out_of_hull = False
 else:
-    neighbor_search_dist = 10
+    neighbor_search_dist = 15
     ka = 2
     coop = 5
     punishment = 1
@@ -78,9 +78,9 @@ else:
     gridB = rotate(grid_base, 90)
     gridB = translate(gridB, 5, 0)
 
-    # pts = np.append(gridA, gridB, 0)
-    pts = gridA
-    pts = np.array([[pt[0] + 1*math.sin(10*pt[1]),
+    pts = np.append(gridA, gridB, 0)
+    # pts = gridA
+    pts = np.array([[pt[0] + 0*math.sin(10*pt[1]),
                     pt[1]] for i,pt in enumerate(pts)])
 
     d = [(x**2 + y**2)**0.5 for x, y in pts]
@@ -123,7 +123,8 @@ scores, neighborhoods, scatter_key, score_key = point_disorder_index(pts[:, 0:2]
                                                                      ka=ka,
                                                                      coop=coop,
                                                                      punishment=punishment,
-                                                                     punish_out_of_hull=punish_out_of_hull)
+                                                                     punish_out_of_hull=punish_out_of_hull,
+                                                                     euclidean=True)
 
 print('Drawing')
 fig, ax = plt.subplots(1, 1)
@@ -141,12 +142,16 @@ if use_dhm:
         #ax.annotate(i, (x, y))
 else:
     ax.scatter(pts[:, 0], pts[:, 1], c=scores, cmap=color_map, vmin=0, vmax=1, edgecolors='black')
+    """
+    for i,(x,y) in enumerate(pts):
+        ax.annotate(i, (x, y))
+    """
 ax.set_aspect('equal')
 plt.show()
-fig.savefig('F:\entropy_veg\scored_synthetic_wall_wavelines.png')
+#fig.savefig('F:\entropy_veg\scored_synthetic_wall_wavelines.png')
 
 """
-ptn = 1319
+ptn = 1089
 for neighbor in neighborhoods[ptn]['neighbors']:
     compare_scatters(neighborhoods[ptn]['coords'],neighborhoods[neighbor]['coords'],'True')
     
