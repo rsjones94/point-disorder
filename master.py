@@ -26,24 +26,28 @@ What if we extended the idea of Haralick textures to vectors? We could build
 a "GLCM" but for a point cloud instead of rasters. "directionality" to disorder
 """
 
-use_dhm = True
+use_dhm = False
 
 if use_dhm:
     im_xlim = (2000, 5000)
     im_ylim = (0, 3000)
     im_path = r'F:\entropy_veg\lidar\las_products\USGS_LPC_TN_27County_blk2_2015_2276581SE_LAS_2017\USGS_LPC_TN_27County_blk2_2015_2276581SE_LAS_2017_dhm.tif'
 
-    neighbor_search_dist = 100
-    ka = 10
-    coop = 4
+    neighbor_search_dist = 40
+    ka = 5
+    coop = 3
     punishment = 1
     punish_out_of_hull = False
+    euc = False
+    reorientation = 10e-3
 else:
-    neighbor_search_dist = 10
-    ka = 2
+    neighbor_search_dist = 15
+    ka = 3
     coop = 5
     punishment = 1
     punish_out_of_hull = False
+    euc = False
+    reorientation = 10e-3
 
 ###############
 
@@ -69,19 +73,18 @@ if use_dhm:
 
     print('Extracting points')
     pts = extract_crowns_from_dhm(sub_image_gray)
-    #d = [(x**2 + y**2)**0.5 for x, y in pts]
 else:
-    grid_base = generate_grid(120, 120, 30, 1)
+    grid_base = generate_grid(100, 100, 6, 3)
 
     # gridA = rotate(grid_base, 45)
     gridA = grid_base
 
-    gridB = rotate(grid_base, 90)
-    gridB = translate(gridB, 5, 0)
+    gridB = rotate(grid_base, 30)
+    #gridB = translate(gridB, 5, 0)
 
-    pts = np.append(gridA, gridB, 0)
-    #pts = gridA
-    pts = np.array([[pt[0] + 3*math.sin(10*pt[1]),
+    #pts = np.append(gridA, gridB, 0)
+    pts = gridA
+    pts = np.array([[pt[0] + 15*math.sin(0.05*pt[1]),
                     pt[1]] for i,pt in enumerate(pts)])
 
     d = [(x**2 + y**2)**0.5 for x, y in pts]
@@ -95,8 +98,8 @@ else:
     pt_copy = []
     for i,(pt,di) in enumerate(zip(pts,d)):
         if di > 70:
-            adder = [np.random.normal(pt[0], 2),
-                     np.random.normal(pt[1], 2)]
+            adder = [np.random.normal(pt[0], 5),
+                     np.random.normal(pt[1], 5)]
         else:
             adder = pt
         pt_copy.append(adder)
@@ -105,7 +108,7 @@ else:
 
     #pts = rotate(pts, 45)
     # pts = np.random.normal(pts,intensity)
-    """
+
     np.random.shuffle(pts)
     keep = int(len(pts)*0.9)
     ptc = []
@@ -115,7 +118,7 @@ else:
         new_d.append(d[i])
     pts = np.array(ptc)
     d = new_d
-    """
+
 
 
 
@@ -125,8 +128,8 @@ scores, neighborhoods, scatter_key, score_key = point_disorder_index(pts[:, 0:2]
                                                                      coop=coop,
                                                                      punishment=punishment,
                                                                      punish_out_of_hull=punish_out_of_hull,
-                                                                     euclidean=False,
-                                                                     reorient_tol=10e-3)
+                                                                     euclidean=euc,
+                                                                     reorient_tol=reorientation)
 
 print('Drawing')
 fig, ax = plt.subplots(1, 1)
@@ -146,7 +149,9 @@ else:
     ax.scatter(pts[:, 0], pts[:, 1], c=scores, cmap=color_map, vmin=0, vmax=1, edgecolors='black')
     #for i,(x,y) in enumerate(pts):
     #    ax.annotate(i, (x, y))
-
+ax.set_title(f'r={neighbor_search_dist}, ka={ka}, coop={coop}\n'
+         f'punishment={punishment}, punish_out_of_hull={punish_out_of_hull}\n'
+         f'euc={euc}, reorientation={reorientation}')
 ax.set_aspect('equal')
 plt.show()
 #fig.savefig('F:\entropy_veg\scored_w_metric+pr.png')
