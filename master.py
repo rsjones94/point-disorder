@@ -26,20 +26,20 @@ What if we extended the idea of Haralick textures to vectors? We could build
 a "GLCM" but for a point cloud instead of rasters. "directionality" to disorder
 """
 
-use_dhm = False
+use_dhm = True
 
 if use_dhm:
     im_xlim = (2000, 5000)
     im_ylim = (0, 3000)
     im_path = r'F:\entropy_veg\lidar\las_products\USGS_LPC_TN_27County_blk2_2015_2276581SE_LAS_2017\USGS_LPC_TN_27County_blk2_2015_2276581SE_LAS_2017_dhm.tif'
 
-    neighbor_search_dist = 40
-    ka = 5
-    coop = 3
+    neighbor_search_dist = 100
+    ka = 10
+    coop = 4
     punishment = 1
     punish_out_of_hull = False
-    euc = False
-    reorientation = 10e-3
+    euc = True
+    reorientation = None
 else:
     neighbor_search_dist = 15
     ka = 3
