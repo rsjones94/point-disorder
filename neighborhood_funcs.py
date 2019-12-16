@@ -1,4 +1,5 @@
 import math
+import time
 
 import scipy.spatial
 import numpy as np
@@ -137,7 +138,24 @@ def score_distance(d, ka, coop=1):
     return score
 
 
-def compare_scatters(s1, s2, plot=False, distance_metric='euclidean'):
+def score_distance_p1p2(p1, p2, ka, coop=1):
+    """
+
+
+    Args:
+        x:
+        y:
+        ka:
+        coop:
+
+    Returns:
+
+    """
+    d = distance(p1, p2)
+    return score_distance(d, ka=ka, coop=coop)
+
+
+def compare_scatters(s1, s2, plot=False, distance_metric='euclidean', reorient_tol=None):
     """
     Compares two arrays of x-y coords a score that quantifies their similarity.
 
@@ -145,25 +163,31 @@ def compare_scatters(s1, s2, plot=False, distance_metric='euclidean'):
         s1: the first set of points as a numpy array
         s2: the second set of points as a numpy array
         plot: whether to plot the result
+        distance_metric: the metric used to compute distance. 'euclidean' or callable
+        reorient_tol: if a number is specified, s2 will be reoriented with an iterative Procrustes
+            algorithm before comparison using reorient_tol as the tolerance
 
     Returns:
         A dictionary summarizing the results
 
     """
-    print('In comparison')
+    # print('In comparison')
+
+    if reorient_tol:
+        #print('Reorienting before comparison...')
+        s2, a, b, c = iterative_procrustes(s1, s2, distance_metric=distance_metric, tol=reorient_tol)
 
     swapped = False
     if len(s1) > len(s2):
         s1, s2 = s2, s1
         swapped = True
 
-    print('Computing distances')
     C = cdist(s1, s2, metric=distance_metric)
     _, assignment = linear_sum_assignment(C)
-    print('Assignments made')
 
     #  some points in s2 may not be matched. We need to exclude them from the convex hull
     assigned_coords = [s2[i] for i in assignment]
+    pared_s2 = assigned_coords.copy()
     unpaired_cords = [s for i, s in enumerate(s2) if i not in assignment]
     assigned_coords.extend(s1)  # we know all of s1 is matched because its length is always < s2
     assigned_coords = np.array(assigned_coords)
@@ -180,7 +204,7 @@ def compare_scatters(s1, s2, plot=False, distance_metric='euclidean'):
     n_unpaired_in_hull = len(unpaired_cords_in_hull)
     deviations = [distance(p, s2[assignment[i]]) for i, p in enumerate(s1)]
     if distance_metric is not 'euclidean':
-        scored_vals = [distance_metric(d) for d in deviations]
+        scored_vals = [distance_metric(p, s2[assignment[i]]) for i, p in enumerate(s1)]
     else:
         scored_vals = deviations
 
@@ -212,7 +236,8 @@ def compare_scatters(s1, s2, plot=False, distance_metric='euclidean'):
                 'n_unpaired': n_unpaired,
                 'n_unpaired_in_hull': n_unpaired_in_hull,
                 'deviations': deviations,
-                'scored_vals': scored_vals}
+                'scored_vals': scored_vals,
+                'paired_coords': (s1, pared_s2)}
 
     return ret_dict
 
@@ -235,13 +260,15 @@ def in_hull(p, hull):
     return hull.find_simplex(p) >= 0
 
 
-def generate_scatter_key(neighborhoods, distance_metric='euclidean'):
+def generate_scatter_key(neighborhoods, distance_metric='euclidean', reorient_tol=False):
     """
     Create a BidirectionalDict object where each key relates the neighborhoods of two points.
     A key i,j is only generated if i and j are in one another's neighborhood.
 
     Args:
         neighborhoods: a list where each entry is a dict with keys for point indices and coordinates
+        distance_metric:
+        reorient_tol:
 
     Returns:
         BidirectionalDict
@@ -249,14 +276,24 @@ def generate_scatter_key(neighborhoods, distance_metric='euclidean'):
     """
     result = BidirectionalDict()
     n_hoods = len(neighborhoods)
+    start = time.time()
     for i, d in enumerate(neighborhoods):
-        print(f'Generating comparisons for {i} of {n_hoods} (n={len(d["neighbors"])})')
+        elap = time.time()
+        mins = (elap - start) / 60
+        pace = mins / (i+1)
+        remaining_iters = n_hoods-(i+1)
+        remaining_time = pace*remaining_iters
+        print(f'{i} of {n_hoods} (n={len(d["neighbors"])}). {round(mins, 2)} min elapsed. {round(remaining_time, 2)} mins remaining.')
         for j in d['neighbors']:
             if (i, j) not in result:
                 result[i, j] = compare_scatters(neighborhoods[i]['coords'],
                                                 neighborhoods[j]['coords'],
                                                 plot=False,
-                                                distance_metric=distance_metric)
+                                                distance_metric=distance_metric,
+                                                reorient_tol=reorient_tol)
+    final = time.time()
+    total_time = final-start
+    print(f'Total time: {round(total_time/60, 2)} minutes')
 
     return result
 
@@ -307,7 +344,7 @@ def score_points(neighborhoods, score_key):
 
 
 def point_disorder_index(pts, neighborhood_radius, ka=None, coop=1,
-                         punishment=1, punish_out_of_hull=False, euclidean=True):
+                         punishment=1, punish_out_of_hull=False, euclidean=True, reorient_tol=False):
     """
     Generates the quantified point disorder index for a list of points
 
@@ -327,7 +364,7 @@ def point_disorder_index(pts, neighborhood_radius, ka=None, coop=1,
         A list of disorder scores for the input points
     """
     if not euclidean:
-        distance_metric = lambda d: score_distance(d, ka, coop)
+        distance_metric = lambda p1, p2: score_distance_p1p2(p1, p2, ka, coop)
     else:
         distance_metric = 'euclidean'
 
@@ -336,7 +373,7 @@ def point_disorder_index(pts, neighborhood_radius, ka=None, coop=1,
     print('Composing neighborhoods')
     neighborhoods = compose_neighborhoods(pts, neighborhood_radius)
     print('Generating comparison keys')
-    scatter_key = generate_scatter_key(neighborhoods)
+    scatter_key = generate_scatter_key(neighborhoods, distance_metric=distance_metric, reorient_tol=reorient_tol)
     print('Scoring')
     score_key = generate_score_key(scatter_key,
                                    ka=ka,
@@ -375,6 +412,7 @@ def score_realignment(s1, s2, realignment_params, distance_metric='euclidean'):
 def evolutionary_transformation(s1, s2, translate=True, rotate=True, reflect=True, distance_metric='euclidean'):
     """
     Aligns s2 such that the distance between point-pairs is minimized. Modified Procrustes analysis
+    slow af
 
     Args:
         s1: a np array of points
@@ -424,6 +462,7 @@ def evolutionary_transformation(s1, s2, translate=True, rotate=True, reflect=Tru
 
     return optimal_set, optimal_realignment_parameters
 
+
 def mod_procrustes(data1, data2):
     """
     Modified procrustes fxn where you can get the rotation, scaling and translation out
@@ -469,17 +508,17 @@ def mod_procrustes(data1, data2):
 
     # transform mtx2 to minimize disparity
     R, s = scipy.linalg.orthogonal_procrustes(mtx1, mtx2)
-    mtx2 = np.dot(mtx2, R.T) * s    # HERE, the projected mtx2 is estimated.
+    mtx2 = np.dot(mtx2, R.T) * s  # HERE, the projected mtx2 is estimated.
 
     # measure the dissimilarity between the two datasets
     disparity = np.sum(np.square(mtx1 - mtx2))
 
-    return mtx1, mtx2, disparity, R, mtx1_translation-mtx2_translation, norm1/norm2
+    return mtx1, mtx2, disparity, R, mtx1_translation - mtx2_translation, norm1 / norm2
 
 
 def procrustes_transformation(s, rotation, translation, scale):
     """
-
+    Transforms a point set using output from mod_procrustes
 
     Args:
         s:
@@ -501,3 +540,73 @@ def procrustes_transformation(s, rotation, translation, scale):
     return mod_grid
 
 
+def iterative_procrustes(s1, s2, distance_metric='euclidean', tol=10e-3):
+    """
+    Procrustes alignment that does not require prior point assignment or equal number of points
+
+    
+    Args:
+        s1: the reference point set
+        s2: the set to be aligned
+        distance_metric: how distances are measured for determining point assignment. 'euclidean' or callable
+        tol: the improvement between iterations needed to prevent termination
+
+    Returns:
+        the realigned point set, rotation, translation, scale
+        
+    """
+    static = s1.copy()
+    to_transform = s2.copy()
+
+    reordered = False
+    if len(s1) > len(s2):
+        reordered = True
+
+    analysis = compare_scatters(static, to_transform,
+                                plot=False,
+                                distance_metric=distance_metric,
+                                reorient_tol=None)
+    p_st, p_tr = analysis['paired_coords']
+    if reordered:
+        p_st, p_tr = p_tr, p_st
+    initial_score = np.mean(analysis['scored_vals'])
+
+    improvement = tol * 2
+    it = 0
+    while improvement > tol:
+        try:
+            mtx1, mtx2, disp, R, trans, scale = mod_procrustes(p_st, p_tr)
+        except ValueError:
+            R_cum = np.array([np.array([1,0]), np.array([0,1])])
+            trans_cum = np.array([0,0])
+            scale_cum = 1.0
+            break
+
+        if it == 0:
+            R_cum = R
+            trans_cum = trans
+            scale_cum = scale
+        else:
+            R_cum = R_cum @ R
+            trans_cum += trans
+            scale_cum += scale
+
+        to_transform = procrustes_transformation(to_transform, R, trans, scale)
+
+        analysis = compare_scatters(static, to_transform,
+                                    plot=False,
+                                    distance_metric=distance_metric,
+                                    reorient_tol=None)
+        p_st, p_tr = analysis['paired_coords']
+        if reordered:
+            p_st, p_tr = p_tr, p_st
+        final_score = np.mean(analysis['scored_vals'])
+
+        improvement = initial_score - final_score
+        initial_score = final_score
+
+        #print(f'IMPROVEMENT on iteration {it}: {round(improvement, 5)}')
+
+        it += 1
+
+    return to_transform, R_cum, trans_cum, scale_cum

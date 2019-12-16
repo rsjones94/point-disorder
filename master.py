@@ -26,7 +26,7 @@ What if we extended the idea of Haralick textures to vectors? We could build
 a "GLCM" but for a point cloud instead of rasters. "directionality" to disorder
 """
 
-use_dhm = False
+use_dhm = True
 
 if use_dhm:
     im_xlim = (2000, 5000)
@@ -39,7 +39,7 @@ if use_dhm:
     punishment = 1
     punish_out_of_hull = False
 else:
-    neighbor_search_dist = 15
+    neighbor_search_dist = 10
     ka = 2
     coop = 5
     punishment = 1
@@ -64,13 +64,14 @@ if use_dhm:
     image_gray[image_gray > 500] = 0  # remove weird tall anomalies
     image_gray[image_gray < 3] = 0  # remove anything under 3m (noise)
 
-    sub_image_gray = image_gray[im_xlim[0]:im_xlim[1], im_ylim[0]:im_ylim[1]]
+    sub_image_gray = image_gray
+    #sub_image_gray = image_gray[im_xlim[0]:im_xlim[1], im_ylim[0]:im_ylim[1]]
 
     print('Extracting points')
     pts = extract_crowns_from_dhm(sub_image_gray)
-    d = [(x**2 + y**2)**0.5 for x, y in pts]
+    #d = [(x**2 + y**2)**0.5 for x, y in pts]
 else:
-    grid_base = generate_grid(80, 80, 6, 1.5)
+    grid_base = generate_grid(120, 120, 30, 1)
 
     # gridA = rotate(grid_base, 45)
     gridA = grid_base
@@ -79,8 +80,8 @@ else:
     gridB = translate(gridB, 5, 0)
 
     pts = np.append(gridA, gridB, 0)
-    # pts = gridA
-    pts = np.array([[pt[0] + 0*math.sin(10*pt[1]),
+    #pts = gridA
+    pts = np.array([[pt[0] + 3*math.sin(10*pt[1]),
                     pt[1]] for i,pt in enumerate(pts)])
 
     d = [(x**2 + y**2)**0.5 for x, y in pts]
@@ -93,7 +94,7 @@ else:
 
     pt_copy = []
     for i,(pt,di) in enumerate(zip(pts,d)):
-        if di > 50:
+        if di > 70:
             adder = [np.random.normal(pt[0], 2),
                      np.random.normal(pt[1], 2)]
         else:
@@ -124,7 +125,8 @@ scores, neighborhoods, scatter_key, score_key = point_disorder_index(pts[:, 0:2]
                                                                      coop=coop,
                                                                      punishment=punishment,
                                                                      punish_out_of_hull=punish_out_of_hull,
-                                                                     euclidean=True)
+                                                                     euclidean=False,
+                                                                     reorient_tol=10e-3)
 
 print('Drawing')
 fig, ax = plt.subplots(1, 1)
@@ -142,18 +144,18 @@ if use_dhm:
         #ax.annotate(i, (x, y))
 else:
     ax.scatter(pts[:, 0], pts[:, 1], c=scores, cmap=color_map, vmin=0, vmax=1, edgecolors='black')
-    """
-    for i,(x,y) in enumerate(pts):
-        ax.annotate(i, (x, y))
-    """
+    #for i,(x,y) in enumerate(pts):
+    #    ax.annotate(i, (x, y))
+
 ax.set_aspect('equal')
 plt.show()
-#fig.savefig('F:\entropy_veg\scored_synthetic_wall_wavelines.png')
+#fig.savefig('F:\entropy_veg\scored_w_metric+pr.png')
 
 """
-ptn = 1089
+ptn = 346
+distance_metric = lambda p1, p2: score_distance_p1p2(p1, p2, ka, coop)
 for neighbor in neighborhoods[ptn]['neighbors']:
-    compare_scatters(neighborhoods[ptn]['coords'],neighborhoods[neighbor]['coords'],'True')
+    compare_scatters(neighborhoods[ptn]['coords'],neighborhoods[neighbor]['coords'], plot=True, distance_metric=distance_metric, reorient_tol=0.01)
     
 if not use_dhm:
     fig, ax = plt.subplots(1, 2)
