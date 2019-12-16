@@ -372,7 +372,7 @@ def score_realignment(s1, s2, realignment_params, distance_metric='euclidean'):
     return result
 
 
-def mod_procrustes(s1, s2, translate=True, rotate=True, reflect=True, distance_metric='euclidean'):
+def evolutionary_transformation(s1, s2, translate=True, rotate=True, reflect=True, distance_metric='euclidean'):
     """
     Aligns s2 such that the distance between point-pairs is minimized. Modified Procrustes analysis
 
@@ -423,3 +423,81 @@ def mod_procrustes(s1, s2, translate=True, rotate=True, reflect=True, distance_m
                           optimal_realignment_parameters[3])
 
     return optimal_set, optimal_realignment_parameters
+
+def mod_procrustes(data1, data2):
+    """
+    Modified procrustes fxn where you can get the rotation, scaling and translation out
+
+    Args:
+        data1: reference
+        data2: data to be transformed
+
+    Returns:
+        mtx1
+        mtx2
+        R
+        translation
+        scaling
+
+    """
+    mtx1 = np.array(data1, dtype=np.double, copy=True)
+    mtx2 = np.array(data2, dtype=np.double, copy=True)
+
+    if mtx1.ndim != 2 or mtx2.ndim != 2:
+        raise ValueError("Input matrices must be two-dimensional")
+    if mtx1.shape != mtx2.shape:
+        raise ValueError("Input matrices must be of same shape")
+    if mtx1.size == 0:
+        raise ValueError("Input matrices must be >0 rows and >0 cols")
+
+    # translate all the data to the origin
+    mtx1_translation = np.mean(mtx1, 0)
+    mtx2_translation = np.mean(mtx2, 0)
+
+    mtx1 -= mtx1_translation
+    mtx2 -= mtx2_translation
+
+    norm1 = np.linalg.norm(mtx1)
+    norm2 = np.linalg.norm(mtx2)
+
+    if norm1 == 0 or norm2 == 0:
+        raise ValueError("Input matrices must contain >1 unique points")
+
+    # change scaling of data (in rows) such that trace(mtx*mtx') = 1
+    mtx1 /= norm1
+    mtx2 /= norm2
+
+    # transform mtx2 to minimize disparity
+    R, s = scipy.linalg.orthogonal_procrustes(mtx1, mtx2)
+    mtx2 = np.dot(mtx2, R.T) * s    # HERE, the projected mtx2 is estimated.
+
+    # measure the dissimilarity between the two datasets
+    disparity = np.sum(np.square(mtx1 - mtx2))
+
+    return mtx1, mtx2, disparity, R, mtx1_translation-mtx2_translation, norm1/norm2
+
+
+def procrustes_transformation(s, rotation, translation, scale):
+    """
+
+
+    Args:
+        s:
+        rotation:
+        translation:
+        scale:
+
+    Returns:
+
+    """
+    mod_grid = s.copy()
+    grid_mean = np.mean(mod_grid, 0)
+    mod_grid = mod_grid - grid_mean
+    mod_grid *= scale
+    mod_grid = mod_grid @ np.linalg.inv(rotation)
+    mod_grid += grid_mean
+    mod_grid += translation
+
+    return mod_grid
+
+
