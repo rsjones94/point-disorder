@@ -33,8 +33,8 @@ if use_dhm:
     im_ylim = (0, 3000)
     im_path = r'F:\entropy_veg\lidar\las_products\USGS_LPC_TN_27County_blk2_2015_2276581SE_LAS_2017\USGS_LPC_TN_27County_blk2_2015_2276581SE_LAS_2017_dhm.tif'
 
-    neighbor_search_dist = 100
-    ka = 10
+    neighbor_search_dist = 50
+    ka = 8
     coop = 4
     punishment = 1
     punish_out_of_hull = False
