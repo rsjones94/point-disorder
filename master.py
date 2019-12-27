@@ -9,24 +9,11 @@ from pattern_generation import *
 from comparison import BidirectionalDict
 
 """
-Thoughts:
-should allow some kind of scaling/rotation/translation/mirroring (affine), maybe even warping (non-affine)
-    BUT be aware that allowing unlimited transformation would probably result in cheating by
-    optimization heuristics
-^ if above is paired with NOT penalizing unpaired points, then excess densification could cheat the measure
-Perhaps penalize unapaired points IFF they are within the convex hull of the paired points (which would
-discourage densification but reduce edge penalization)
-
-ISSUE: Hungarian method minimizes total distance, NOT my scoring scheme
-    e.g., sometimes it is obvious that an overlapping pattern exists,
-    but is offset in a way s.t. the Hungarian matching
-    produces a strange matching scheme
-
 What if we extended the idea of Haralick textures to vectors? We could build
 a "GLCM" but for a point cloud instead of rasters. "directionality" to disorder
 """
 
-use_dhm = True
+use_dhm = False
 
 if use_dhm:
     im_xlim = (2000, 5000)
@@ -86,6 +73,9 @@ else:
     pts = gridA
     pts = np.array([[pt[0] + 15*math.sin(0.05*pt[1]),
                     pt[1]] for i,pt in enumerate(pts)])
+    pts = rotate(pts, 90)
+    pts = np.array([[pt[0] + 15*math.sin(0.05*pt[1]),
+                    pt[1]] for i,pt in enumerate(pts)])
 
     d = [(x**2 + y**2)**0.5 for x, y in pts]
     intensity = [di / 40 for di in d]
@@ -95,29 +85,15 @@ else:
                      np.random.normal(pt[1], intensity[i])] for i,pt in enumerate(pts)])
     """
 
-    pt_copy = []
-    for i,(pt,di) in enumerate(zip(pts,d)):
-        if di > 70:
-            adder = [np.random.normal(pt[0], 5),
-                     np.random.normal(pt[1], 5)]
-        else:
-            adder = pt
-        pt_copy.append(adder)
-    pts = np.array(pt_copy)
+
+    #pts = peturb_constant(pts, 5, 70)
+    pts = peturb_gradational(pts, 0.05, 50)
 
 
     #pts = rotate(pts, 45)
     # pts = np.random.normal(pts,intensity)
 
-    np.random.shuffle(pts)
-    keep = int(len(pts)*0.9)
-    ptc = []
-    new_d = []
-    for i in range(keep):
-        ptc.append(pts[i])
-        new_d.append(d[i])
-    pts = np.array(ptc)
-    d = new_d
+    #pts = decimate_grid(pts, 0.7)
 
 
 

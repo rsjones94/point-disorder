@@ -557,6 +557,7 @@ def iterative_procrustes(s1, s2, distance_metric='euclidean', tol=10e-3):
     """
     static = s1.copy()
     to_transform = s2.copy()
+    unmodified = to_transform.copy()
 
     reordered = False
     if len(s1) > len(s2):
@@ -570,6 +571,7 @@ def iterative_procrustes(s1, s2, distance_metric='euclidean', tol=10e-3):
     if reordered:
         p_st, p_tr = p_tr, p_st
     initial_score = np.mean(analysis['scored_vals'])
+    first_score = initial_score
 
     improvement = tol * 2
     it = 0
@@ -608,5 +610,14 @@ def iterative_procrustes(s1, s2, distance_metric='euclidean', tol=10e-3):
         #print(f'IMPROVEMENT on iteration {it}: {round(improvement, 5)}')
 
         it += 1
+    try:
+        if first_score < final_score: # if we actually don't improve anything
+            print('\n\nNO IMPROVEMENT\n\n')
+            to_transform = unmodified
+            R_cum = np.array([np.array([1,0]), np.array([0,1])])
+            trans_cum = np.array([0,0])
+            scale_cum = 1.0
+    except UnboundLocalError:
+        pass
 
     return to_transform, R_cum, trans_cum, scale_cum

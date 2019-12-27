@@ -23,8 +23,6 @@ def generate_grid(xmax, ymax, step_x, step_y):
 
     return pts
 
-def re():
-    return 1
 
 def realign(array, theta, del_x, del_y, to_reflect):
     """
@@ -106,3 +104,150 @@ def rotate(array, theta):
     c = c @ r.T
 
     return c
+
+
+def peturb_constant(grid, amplitude, radius=0):
+    """
+    Takes a grid of point and applies a constant peturbation to it. Only peturbs points greater than a distance of radius
+    from the origin
+
+    Args:
+        grid: input grid
+        amplitude: standard deviation of amplitude
+        radius: radius of non-peturbation
+
+    Returns:
+        peturbed grid
+
+    """
+    d = [(x**2 + y**2)**0.5 for x, y in grid]
+    pt_copy = []
+    for i,(pt,di) in enumerate(zip(grid,d)):
+        if di > radius:
+            adder = [np.random.normal(pt[0], amplitude),
+                     np.random.normal(pt[1], amplitude)]
+        else:
+            adder = pt
+        pt_copy.append(adder)
+    pts = np.array(pt_copy)
+    return pts
+
+
+def peturb_gradational(grid, amplitude_per_distance, radius=0):
+    """
+    Takes a grid of point and applies a gradational peturbation to it. Only peturbs points greater than a distance of radius
+    from the origin
+
+    Args:
+        grid: input grid
+        amplitude: standard deviation of amplitude gradient
+        radius: radius of non-peturbation
+
+    Returns:
+        peturbed grid
+
+    """
+    d = [(x**2 + y**2)**0.5 for x, y in grid]
+    pt_copy = []
+    for i,(pt,di) in enumerate(zip(grid,d)):
+        if di > radius:
+            adder = [np.random.normal(pt[0], amplitude_per_distance * (di - radius)),
+                     np.random.normal(pt[1], amplitude_per_distance * (di - radius))]
+        else:
+            adder = pt
+        pt_copy.append(adder)
+    pts = np.array(pt_copy)
+    return pts
+
+
+def decimate_grid(grid, frac):
+    """
+    Randomly deletes points in a grid
+
+    Args:
+        grid: input grid
+        perc: fraction of points to keep
+
+    Returns:
+        decimated grid
+
+    """
+    grid = grid.copy()
+    np.random.shuffle(grid)
+    keep = int(len(grid)*frac)
+    ptc = []
+    new_d = []
+    for i in range(keep):
+        ptc.append(grid[i])
+        new_d.append(grid[i])
+    pts = np.array(ptc)
+    return pts
+
+
+def wavify_grid(grid, amplitude, period):
+    """
+    Add adds a sinusoidal signal to a grid. The signal is based on the x axis only
+
+    Args:
+        grid: input grid
+        amplitude: ampltidue of the signal
+        period: period of the signal
+
+    Returns: a fun and wavy grid
+
+    """
+
+    grid = np.array([[pt[0] + amplitude*math.sin((2*math.pi/period)*pt[1]),
+                    pt[1]] for i,pt in enumerate(grid)])
+    return grid
+
+
+def make_circle(r, n):
+    """
+
+
+    Args:
+        r: radius
+        n: number of points
+
+    Returns: np array
+
+    """
+
+    phis = np.linspace(0, 2 * np.pi, n)
+    rhos = np.ones(n) * r
+
+    def pol2cart(rho, phi):
+        x = rho * np.cos(phi)
+        y = rho * np.sin(phi)
+        return np.array([x, y])
+
+    cart_grid = np.array([pol2cart(rho, phi) for rho, phi in zip(rhos, phis)])
+    return cart_grid
+
+
+def concentric_circles(num_circs, lin_density, distance_between_circles):
+
+    r = distance_between_circles
+    circ = 2 * np.pi * r
+    n_per_circle = int(np.round(lin_density * circ))
+    print(f'Circ:{circ}. r:{r}. n:{n_per_circle}')
+    grid = make_circle(r, n_per_circle)
+    print('inital')
+
+    for n in range(num_circs):
+        r += distance_between_circles
+        circ = 2 * np.pi * r
+        n_per_circle = int(np.round(circ * lin_density))
+        print(f'Circ:{circ}. r:{r}. n:{n_per_circle}')
+        appender = make_circle(r, n_per_circle)
+        print(f'Appender:{appender.shape}. Grid:{grid.shape}')
+        grid = np.append(grid, appender,0)
+        print('appended')
+
+    return grid
+
+"""
+a = concentric_circles(16, 0.5, 6)
+plt.scatter(a[:,0], a[:,1])
+"""
