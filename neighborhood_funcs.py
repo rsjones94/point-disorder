@@ -612,7 +612,7 @@ def iterative_procrustes(s1, s2, distance_metric='euclidean', tol=10e-3):
         it += 1
     try:
         if first_score < final_score: # if we actually don't improve anything
-            print('\n\nNO IMPROVEMENT\n\n')
+            #print('\n\nNO IMPROVEMENT\n\n')
             to_transform = unmodified
             R_cum = np.array([np.array([1,0]), np.array([0,1])])
             trans_cum = np.array([0,0])

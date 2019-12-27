@@ -59,7 +59,7 @@ def reflect(array, holder=1):
 
     """
     c = array.copy()
-    if holder < 0.5:
+    if holder > 0.5:
         c[:, 0] = -c[:, 0]
 
     return c
@@ -120,9 +120,9 @@ def peturb_constant(grid, amplitude, radius=0):
         peturbed grid
 
     """
-    d = [(x**2 + y**2)**0.5 for x, y in grid]
+    d = [(x ** 2 + y ** 2) ** 0.5 for x, y in grid]
     pt_copy = []
-    for i,(pt,di) in enumerate(zip(grid,d)):
+    for i, (pt, di) in enumerate(zip(grid, d)):
         if di > radius:
             adder = [np.random.normal(pt[0], amplitude),
                      np.random.normal(pt[1], amplitude)]
@@ -147,9 +147,9 @@ def peturb_gradational(grid, amplitude_per_distance, radius=0):
         peturbed grid
 
     """
-    d = [(x**2 + y**2)**0.5 for x, y in grid]
+    d = [(x ** 2 + y ** 2) ** 0.5 for x, y in grid]
     pt_copy = []
-    for i,(pt,di) in enumerate(zip(grid,d)):
+    for i, (pt, di) in enumerate(zip(grid, d)):
         if di > radius:
             adder = [np.random.normal(pt[0], amplitude_per_distance * (di - radius)),
                      np.random.normal(pt[1], amplitude_per_distance * (di - radius))]
@@ -174,7 +174,7 @@ def decimate_grid(grid, frac):
     """
     grid = grid.copy()
     np.random.shuffle(grid)
-    keep = int(len(grid)*frac)
+    keep = int(len(grid) * frac)
     ptc = []
     new_d = []
     for i in range(keep):
@@ -197,8 +197,8 @@ def wavify_grid(grid, amplitude, period):
 
     """
 
-    grid = np.array([[pt[0] + amplitude*math.sin((2*math.pi/period)*pt[1]),
-                    pt[1]] for i,pt in enumerate(grid)])
+    grid = np.array([[pt[0] + amplitude * math.sin((2 * math.pi / period) * pt[1]),
+                      pt[1]] for i, pt in enumerate(grid)])
     return grid
 
 
@@ -227,27 +227,76 @@ def make_circle(r, n):
 
 
 def concentric_circles(num_circs, lin_density, distance_between_circles):
-
     r = distance_between_circles
     circ = 2 * np.pi * r
     n_per_circle = int(np.round(lin_density * circ))
-    print(f'Circ:{circ}. r:{r}. n:{n_per_circle}')
     grid = make_circle(r, n_per_circle)
-    print('inital')
 
     for n in range(num_circs):
         r += distance_between_circles
         circ = 2 * np.pi * r
         n_per_circle = int(np.round(circ * lin_density))
-        print(f'Circ:{circ}. r:{r}. n:{n_per_circle}')
         appender = make_circle(r, n_per_circle)
-        print(f'Appender:{appender.shape}. Grid:{grid.shape}')
-        grid = np.append(grid, appender,0)
-        print('appended')
+        grid = np.append(grid, appender, 0)
 
     return grid
 
+
+def stamp_pattern(pattern, xstep, ystep, xlim, ylim, flip=False, rotate_by=0):
+    """
+    Takes a grid and translates it repeatedly, creating "stamps". If flip, the stamp is reflected across the y-axis
+    each time. If rotate, it is rotated 90 degrees each time
+
+    Args:
+        pattern:
+        xstep: number of stamps in x dir
+        ystep: number of stamps in y dir
+        xlim: the max x translation
+        ylim: the max y translation
+        flip: whether to flip the stamp
+        rotate_by: if a number, rotates by that many degrees per stamp
+
+    Returns:
+        A np array representing the stamped grid
+
+    """
+
+    translation_grid = generate_grid(xlim, ylim, xstep, ystep)
+
+    trans = [pattern.copy() for t in translation_grid]
+
+    if flip:
+        trans_new = []
+        do_flip = True
+        for t in trans:
+            do_flip = not do_flip
+            if do_flip:
+                trans_new.append(reflect(t))
+            else:
+                trans_new.append(t)
+        trans = trans_new
+
+    if rotate_by:
+        trans_new = []
+        rot = -rotate_by
+        for t in trans:
+            rot += rotate_by
+            trans_new.append(rotate(t, rot))
+        trans = trans_new
+
+    trans = [translate(t, delx, dely) for t, (delx, dely) in zip(trans, translation_grid)]
+
+    return np.vstack(trans)
+
 """
-a = concentric_circles(16, 0.5, 6)
-plt.scatter(a[:,0], a[:,1])
+pat = np.array([np.array([1, 0]),
+                np.array([0, 2]),
+                np.array([0, 1]),
+                np.array([0, -1]),
+                np.array([0, 0]),
+                np.array([1, 2])]
+               )*5
+
+g = stamp_pattern(pat, 12, 12, 150, 150, flip=False, rotate_by=2)
+plt.scatter(g[:, 0], g[:, 1])
 """
