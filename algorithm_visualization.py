@@ -59,6 +59,8 @@ c1 = plt.Circle((total[poi_2,0], total[poi_2,1]), params['neighbor_search_dist']
 ax[0][0].add_patch(c1)
 ax[0][0].set_aspect('equal')
 
+ax[0][0].set(xlabel='Absolute x', ylabel='Absolute y')
+
 for (pax,pay), distance_metric in zip(plot_positions, d_mecs):
     set_1 = neighbors[poi_1]['coords']
     set_2 = neighbors[poi_2]['coords']
@@ -107,8 +109,9 @@ for (pax,pay), distance_metric in zip(plot_positions, d_mecs):
         ax[pax][pay].plot([s1[p, 0], s2[assignment[p], 0]], [s1[p, 1], s2[assignment[p], 1]], 'k')
 
     ax[pax][pay].set_aspect('equal')
+    ax[pax][pay].set(xlabel='Relative x', ylabel='Relative y')
 
-ax[0][0].set_title('Neighborhoods')
+ax[0][0].set_title(f'Neighborhoods, r = {params["neighbor_search_dist"]}')
 ax[0][1].set_title('Euclidean registration\n'
                    f'Score: {round(np.mean(scores[0]),3)}')
 ax[1][0].set_title('Alternative registration\n'
@@ -224,6 +227,7 @@ for p in range(min([len(s1), len(s2)])):
 ax[1][1].set_title(f'ICP realignment + alternative registration\n'
                    f'Score: {round(np.mean(scored_vals),3)}')
 ax[pax][pay].set_aspect('equal')
+ax[pax][pay].set(xlabel='Relative x', ylabel='Relative y')
 
 plt.tight_layout()
 plt.close()
