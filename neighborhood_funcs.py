@@ -159,6 +159,7 @@ def compare_scatters(s1, s2, plot=False, distance_metric='euclidean', reorient_t
     """
     Compares two arrays of x-y coords a score that quantifies their similarity.
 
+
     Args:
         s1: the first set of points as a numpy array
         s2: the second set of points as a numpy array
@@ -239,6 +240,7 @@ def compare_scatters(s1, s2, plot=False, distance_metric='euclidean', reorient_t
                 'scored_vals': scored_vals,
                 'paired_coords': (s1, pared_s2)}
 
+    assert len(s1) == len(pared_s2)
     return ret_dict
 
 
@@ -543,8 +545,8 @@ def procrustes_transformation(s, rotation, translation, scale):
 def iterative_procrustes(s1, s2, distance_metric='euclidean', tol=10e-3):
     """
     Procrustes alignment that does not require prior point assignment or equal number of points
+    THIS IS A REIMPLEMENTATION OF ITERATIVE CLOSEST POINTS (ICP). DO NOT REINVENT THE WHEEL
 
-    
     Args:
         s1: the reference point set
         s2: the set to be aligned
@@ -570,7 +572,9 @@ def iterative_procrustes(s1, s2, distance_metric='euclidean', tol=10e-3):
     p_st, p_tr = analysis['paired_coords']
     if reordered:
         p_st, p_tr = p_tr, p_st
-    initial_score = np.mean(analysis['scored_vals'])
+    initial_score = np.mean(analysis['deviations'])
+    #initial_score = np.mean(analysis['scored_vals'])
+    print(analysis)
     first_score = initial_score
 
     improvement = tol * 2
@@ -602,17 +606,18 @@ def iterative_procrustes(s1, s2, distance_metric='euclidean', tol=10e-3):
         p_st, p_tr = analysis['paired_coords']
         if reordered:
             p_st, p_tr = p_tr, p_st
-        final_score = np.mean(analysis['scored_vals'])
+        final_score = np.mean(analysis['deviations'])
+        #final_score = np.mean(analysis['scored_vals'])
 
         improvement = initial_score - final_score
         initial_score = final_score
 
-        #print(f'IMPROVEMENT on iteration {it}: {round(improvement, 5)}')
+        print(f'IMPROVEMENT on iteration {it}: {round(improvement, 5)}')
 
         it += 1
     try:
         if first_score < final_score: # if we actually don't improve anything
-            #print('\n\nNO IMPROVEMENT\n\n')
+            print('\n\nNO IMPROVEMENT\n\n')
             to_transform = unmodified
             R_cum = np.array([np.array([1,0]), np.array([0,1])])
             trans_cum = np.array([0,0])
