@@ -27,7 +27,7 @@ neighb_num = 43
 distance_metric1 = 'euclidean'
 distance_metric2 = lambda p1, p2: score_distance_p1p2(p1, p2, params['ka'], params['coop'])
 d_mecs = [distance_metric1, distance_metric2]
-plot_positions = [(1,0),(1,1)]
+plot_positions = [(0,1),(1,0)]
 exes = np.linspace(0,15,500)
 whys = [distance_metric2([0,0],[0,x]) for x in exes]
 
@@ -104,8 +104,8 @@ for (pax,pay), distance_metric in zip(plot_positions, d_mecs):
     ax[pax][pay].set_aspect('equal')
 
 ax[0][0].set_title('Neighborhoods')
-ax[1][0].set_title('Point registration: Euclidean distance')
-ax[1][1].set_title('Point registration: non-Euclidean distance')
+ax[0][1].set_title('Euclidean registration')
+ax[1][0].set_title('Alternative registration')
 
 """
 ax[1][1].scatter(set_1[:, 0], set_1[:, 1], color='red', edgecolors='black')
@@ -158,17 +158,68 @@ for p in range(min([len(s1), len(s2)])):
     ax[pax][pay].plot([s1[p, 0], s2[assignment[p], 0]], [s1[p, 1], s2[assignment[p], 1]], 'k')
 """
 
-ax[0,1].plot(exes,whys,color='dodgerblue')
-ax[0,1].set_aspect(15)
-ax[0,1].set_title(f'Scoring Function: Sigmoidal (Km = {params["ka"]}, n = {params["coop"]})')
-ax[0,1].set(xlabel='Deviation', ylabel='Score')
-ax[0,1].plot([0,max(exes)], [1,1], '--', color='dodgerblue')
-ax[0,1].plot([0,params['ka'],params['ka']], [0.5,0.5,0], '--', color='green')
+## ICP REALIGNMENT
+t, distances, iterations = icp(set_2, set_1, distance_metric=distance_metric2)
+C = np.ones((len(set_2), 3))
+C[:, 0:2] = np.copy(set_2)
+set_2_readj = np.dot(t, C.T).T
+## END ICP REALIGNMENT
+
+ax[1][1].set_title(f'ICP realignment + alternative registration')
+ax[1][1].scatter(set_1[:,0], set_1[:,1], color='red', edgecolors='black')
+ax[1][1].scatter(set_2_readj[:,0], set_2_readj[:,1], color='blue', edgecolors='black')
+ax[1][1].set_aspect('equal')
+
+# register the realigned points
+set_2 = set_2_readj[:,0:2]
+pax = 1
+pay = 1
+ax[pax][pay].scatter(set_1[:, 0], set_1[:, 1], color='red', edgecolors='black')
+ax[pax][pay].scatter(set_2[:, 0], set_2[:, 1], color='blue', edgecolors='black')
+
+swapped = False
+s1, s2 = set_1, set_2
+if len(set_1) > len(set_2):
+    s1, s2 = set_2, set_1
+    swapped = True
+
+C = cdist(s1, s2, metric=distance_metric2)
+_, assignment = linear_sum_assignment(C)
+
+#  some points in s2 may not be matched. We need to exclude them from the convex hull
+assigned_coords = [s2[i] for i in assignment]
+pared_s2 = assigned_coords.copy()
+unpaired_cords = [s for i, s in enumerate(s2) if i not in assignment]
+assigned_coords.extend(s1)  # we know all of s1 is matched because its length is always < s2
+assigned_coords = np.array(assigned_coords)
+try:
+    hull = scipy.spatial.ConvexHull(assigned_coords)
+    unpaired_cords_in_hull = [s for s in unpaired_cords if in_hull(s, hull.points)]
+except scipy.spatial.qhull.QhullError:
+    hull = None
+    unpaired_cords_in_hull = unpaired_cords
+
+n_smaller = len(s1)
+n_bigger = len(s2)
+n_unpaired = len(unpaired_cords)
+n_unpaired_in_hull = len(unpaired_cords_in_hull)
+deviations = [distance(p, s2[assignment[i]]) for i, p in enumerate(s1)]
+if distance_metric is not 'euclidean':
+    scored_vals = [distance_metric(p, s2[assignment[i]]) for i, p in enumerate(s1)]
+else:
+    scored_vals = deviations
+
+for simplex in hull.simplices:
+    ax[pax][pay].plot(assigned_coords[simplex, 0], assigned_coords[simplex, 1], 'k-', color='green', lw=2)
+
+for p in range(min([len(s1), len(s2)])):
+    ax[pax][pay].plot([s1[p, 0], s2[assignment[p], 0]], [s1[p, 1], s2[assignment[p], 1]], 'k')
+
+ax[pax][pay].set_aspect('equal')
 
 plt.tight_layout()
 plt.close()
 fig.savefig(outloc)
-
 
 
 fig, ax = plt.subplots(1, 1, figsize=(8, 8))
@@ -181,19 +232,3 @@ ax.plot([0,params['ka'],params['ka']], [0.5,0.5,0], '--', color='green')
 plt.close()
 fig.savefig(outloc2)
 
-## ICP REALIGNMENT
-t, distances, iterations = icp(set_2, set_1, distance_metric=distance_metric2)
-C = np.ones((len(set_2), 3))
-C[:, 0:2] = np.copy(set_2)
-set_2_readj = np.dot(t, C.T).T
-
-fig, ax = plt.subplots(1, 1, figsize=(8, 8))
-ax.plot(exes,whys,color='dodgerblue')
-ax.set_aspect('equal')
-ax.set_title(f'ICP Realignment')
-ax.scatter(set_1[:,0], set_1[:,1], color='red', edgecolors='black')
-ax.scatter(set_2_readj[:,0], set_2_readj[:,1], color='blue', edgecolors='black')
-plt.close()
-## ICP REALIGNMENT
-
-fig.savefig(outloc3)
