@@ -12,16 +12,18 @@ poi_1 = 370
 
 
 outloc = r'C:\Users\rsjon_000\Documents\point-disorder\point_disorder_paper\figures\neighborhood_generation.png'
-outloc2 = r'C:\Users\rsjon_000\Documents\point-disorder\point_disorder_paper\figures\scoring_func.png'
-outloc3 = r'C:\Users\rsjon_000\Documents\point-disorder\point_disorder_paper\figures\TESTTEST.png'
 
 params = {'neighbor_search_dist': 45,
-          'ka': 5,
-          'coop': 5,
+          'ka': 6,
+          'coop': 6,
           'punishment': 1,
           'punish_out_of_hull': False,
           'euc': False,
           'reorientation': 10e-3}
+
+outloc2 = f'C:\\Users\\rsjon_000\\Documents\\point-disorder\\point_disorder_paper\\figures\\' \
+          f'scoring_func.png'
+
 neighb_num = 43
 
 distance_metric1 = 'euclidean'
@@ -45,6 +47,7 @@ neighbors = compose_neighborhoods(total, params['neighbor_search_dist'])
 poi_2 = neighbors[poi_1]['neighbors'][neighb_num]
 
 fig, ax = plt.subplots(2, 2, figsize=(8, 8))
+scores = []
 
 ax[0][0].scatter(total[:,0], total[:,1], color='gold', edgecolors='black')
 ax[0][0].scatter(total[poi_1,0], total[poi_1,1], color='red', edgecolors='black')
@@ -90,10 +93,12 @@ for (pax,pay), distance_metric in zip(plot_positions, d_mecs):
     n_unpaired = len(unpaired_cords)
     n_unpaired_in_hull = len(unpaired_cords_in_hull)
     deviations = [distance(p, s2[assignment[i]]) for i, p in enumerate(s1)]
-    if distance_metric is not 'euclidean':
-        scored_vals = [distance_metric(p, s2[assignment[i]]) for i, p in enumerate(s1)]
+    if True:
+        scored_vals = [distance_metric2(p, s2[assignment[i]]) for i, p in enumerate(s1)]
     else:
         scored_vals = deviations
+
+    scores.append(np.mean(scored_vals))
 
     for simplex in hull.simplices:
         ax[pax][pay].plot(assigned_coords[simplex, 0], assigned_coords[simplex, 1], 'k-', color='green', lw=2)
@@ -104,8 +109,10 @@ for (pax,pay), distance_metric in zip(plot_positions, d_mecs):
     ax[pax][pay].set_aspect('equal')
 
 ax[0][0].set_title('Neighborhoods')
-ax[0][1].set_title('Euclidean registration')
-ax[1][0].set_title('Alternative registration')
+ax[0][1].set_title('Euclidean registration\n'
+                   f'Score: {round(np.mean(scores[0]),3)}')
+ax[1][0].set_title('Alternative registration\n'
+                   f'Score: {round(np.mean(scores[1]),3)}')
 
 """
 ax[1][1].scatter(set_1[:, 0], set_1[:, 1], color='red', edgecolors='black')
@@ -165,7 +172,6 @@ C[:, 0:2] = np.copy(set_2)
 set_2_readj = np.dot(t, C.T).T
 ## END ICP REALIGNMENT
 
-ax[1][1].set_title(f'ICP realignment + alternative registration')
 ax[1][1].scatter(set_1[:,0], set_1[:,1], color='red', edgecolors='black')
 ax[1][1].scatter(set_2_readj[:,0], set_2_readj[:,1], color='blue', edgecolors='black')
 ax[1][1].set_aspect('equal')
@@ -215,6 +221,8 @@ for simplex in hull.simplices:
 for p in range(min([len(s1), len(s2)])):
     ax[pax][pay].plot([s1[p, 0], s2[assignment[p], 0]], [s1[p, 1], s2[assignment[p], 1]], 'k')
 
+ax[1][1].set_title(f'ICP realignment + alternative registration\n'
+                   f'Score: {round(np.mean(scored_vals),3)}')
 ax[pax][pay].set_aspect('equal')
 
 plt.tight_layout()
