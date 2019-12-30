@@ -49,7 +49,7 @@ params.append({'neighbor_search_dist': 20,
                'punishment': 1,
                'punish_out_of_hull': False,
                'euc': False,
-               'reorientation': 10e-3})
+               'reorientation': None})
 
 working = square_grid
 working = peturb_gradational(working, pet_gradient, pet_radius)

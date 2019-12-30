@@ -574,7 +574,7 @@ def iterative_procrustes(s1, s2, distance_metric='euclidean', tol=10e-3):
         p_st, p_tr = p_tr, p_st
     initial_score = np.mean(analysis['deviations'])
     #initial_score = np.mean(analysis['scored_vals'])
-    print(analysis)
+    #print(analysis)
     first_score = initial_score
 
     improvement = tol * 2
@@ -612,7 +612,7 @@ def iterative_procrustes(s1, s2, distance_metric='euclidean', tol=10e-3):
         improvement = initial_score - final_score
         initial_score = final_score
 
-        print(f'IMPROVEMENT on iteration {it}: {round(improvement, 5)}')
+        #print(f'IMPROVEMENT on iteration {it}: {round(improvement, 5)}')
 
         it += 1
     try:

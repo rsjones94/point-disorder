@@ -2,6 +2,7 @@ from skimage import io
 import matplotlib.pyplot as plt
 from matplotlib import cm
 import numpy as np
+from matplotlib.cm import ScalarMappable
 
 from tree_extraction import extract_crowns_from_dhm
 from neighborhood_funcs import *
@@ -13,16 +14,17 @@ What if we extended the idea of Haralick textures to vectors? We could build
 a "GLCM" but for a point cloud instead of rasters. "directionality" to disorder
 """
 
-use_dhm = False
+use_dhm = True
 
 if use_dhm:
-    im_xlim = (2000, 5000)
+    outname = r'C:\Users\rsjon_000\Documents\point-disorder\point_disorder_paper\figures\trees.png'
+    im_xlim = (1500, 5000)
     im_ylim = (0, 3000)
     im_path = r'F:\entropy_veg\lidar\las_products\USGS_LPC_TN_27County_blk2_2015_2276581SE_LAS_2017\USGS_LPC_TN_27County_blk2_2015_2276581SE_LAS_2017_dhm.tif'
 
-    neighbor_search_dist = 50
-    ka = 8
-    coop = 4
+    neighbor_search_dist = 70
+    ka = 6
+    coop = 5
     punishment = 1
     punish_out_of_hull = False
     euc = True
@@ -38,11 +40,13 @@ else:
 
 ###############
 
+"""
 exes = np.linspace(0,100,1100)
 whys = [score_distance(x,ka,coop) for x in exes]
 plt.figure()
 plt.plot(exes,whys)
 plt.show()
+"""
 
 """
 response = input("How's the response curve look?")
@@ -56,7 +60,7 @@ if use_dhm:
     image_gray[image_gray < 3] = 0  # remove anything under 3m (noise)
 
     sub_image_gray = image_gray
-    #sub_image_gray = image_gray[im_xlim[0]:im_xlim[1], im_ylim[0]:im_ylim[1]]
+    sub_image_gray = image_gray[im_xlim[0]:im_xlim[1], im_ylim[0]:im_ylim[1]]
 
     print('Extracting points')
     pts = extract_crowns_from_dhm(sub_image_gray)
@@ -108,7 +112,7 @@ scores, neighborhoods, scatter_key, score_key = point_disorder_index(pts[:, 0:2]
                                                                      reorient_tol=reorientation)
 
 print('Drawing')
-fig, ax = plt.subplots(1, 1)
+fig, ax = plt.subplots(1, 1, figsize=(12,8))
 color_map = cm.get_cmap('RdYlGn_r')
 if use_dhm:
     ax.imshow(sub_image_gray, cmap='gray')
@@ -128,9 +132,17 @@ else:
 ax.set_title(f'r={neighbor_search_dist}, ka={ka}, coop={coop}\n'
          f'punishment={punishment}, punish_out_of_hull={punish_out_of_hull}\n'
          f'euc={euc}, reorientation={reorientation}')
+
+norm = plt.Normalize(0, 1)
+sm = ScalarMappable(norm=norm, cmap=color_map)
+cbar = fig.colorbar(sm, ax=ax)
+cbar.ax.set_title('IoD')
+
 ax.set_aspect('equal')
+plt.tight_layout()
 plt.show()
-#fig.savefig('F:\entropy_veg\scored_w_metric+pr.png')
+fig.savefig(outname)
+plt.close()
 
 """
 ptn = 346
