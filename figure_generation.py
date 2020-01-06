@@ -92,7 +92,7 @@ params.append({'neighbor_search_dist': 15,
                'punish_out_of_hull': False,
                'euc': False,
                'reorientation': 10e-3})
-"""
+
 working = concentric_circles(12, 0.5, 8)
 working = peturb_gradational(working, pet_gradient, pet_radius)
 grids.append(working)
@@ -164,6 +164,7 @@ params.append({'neighbor_search_dist': 15,
                'punish_out_of_hull': False,
                'euc': False,
                'reorientation': 10e-3})
+"""
 
 working = stamp_pattern(stamp, 8, 8, 100, 100, flip=False, rotate_by=2)
 working = peturb_gradational(working, pet_gradient, pet_radius)
@@ -174,9 +175,9 @@ params.append({'neighbor_search_dist': 20,
                'coop': 5,
                'punishment': 1,
                'punish_out_of_hull': False,
-               'euc': False,
+               'euc': True,
                'reorientation': 10e-3})
-
+"""
 working = stamp_pattern(stamp, 8, 8, 100, 100, flip=False, rotate_by=0)
 working = peturb_gradational(working, pet_gradient, pet_radius)
 grids.append(working)
@@ -188,6 +189,7 @@ params.append({'neighbor_search_dist': 20,
                'punish_out_of_hull': False,
                'euc': False,
                'reorientation': None})
+"""
 
 
 for pts, name, pars in zip(grids, names, params):
