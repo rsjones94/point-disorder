@@ -15,20 +15,49 @@ a "GLCM" but for a point cloud instead of rasters. "directionality" to disorder
 """
 
 use_dhm = True
+trees_1 = False
+trees_2 = True
 
 if use_dhm:
-    outname = r'C:\Users\rsjon_000\Documents\point-disorder\point_disorder_paper\figures\trees.png'
-    im_xlim = (1500, 5000)
-    im_ylim = (0, 3000)
-    im_path = r'F:\entropy_veg\lidar\las_products\USGS_LPC_TN_27County_blk2_2015_2276581SE_LAS_2017\USGS_LPC_TN_27County_blk2_2015_2276581SE_LAS_2017_dhm.tif'
+    if trees_1:
+        outname = r'C:\Users\rsjon_000\Documents\point-disorder\point_disorder_paper\figures\trees_1.png'
+        im_xlim = (1500, 5000)
+        im_ylim = (0, 3000)
+        im_path = r'F:\entropy_veg\lidar\las_products\USGS_LPC_TN_27County_blk2_2015_2276581SE_LAS_2017\USGS_LPC_TN_27County_blk2_2015_2276581SE_LAS_2017_dhm.tif'
 
-    neighbor_search_dist = 70
-    ka = 6
-    coop = 5
-    punishment = 1
-    punish_out_of_hull = False
-    euc = True
-    reorientation = None
+        neighbor_search_dist = 70
+        ka = 6
+        coop = 5
+        punishment = 1
+        punish_out_of_hull = False
+        euc = True
+        reorientation = None
+
+        max_sigma = 35
+        min_sigma = 6
+        num_sigma = 10
+        threshold = 2
+        overlap = .01
+    elif trees_2:
+        outname = r'C:\Users\rsjon_000\Documents\point-disorder\point_disorder_paper\figures\trees_2.png'
+        im_xlim = (0, 3200)
+        im_ylim = (4250, 7000)
+        im_path = r'F:\entropy_veg\lidar\las_products\USGS_LPC_TN_27County_blk2_2015_2276581SE_LAS_2017\USGS_LPC_TN_27County_blk2_2015_2276581SE_LAS_2017_dhm.tif'
+
+        neighbor_search_dist = 65
+        ka = 20
+        coop = 5
+        punishment = 1
+        punish_out_of_hull = False
+        euc = False
+        reorientation = None
+        max_sigma = 50
+        min_sigma = 10
+        num_sigma = 10
+        threshold = 5
+        overlap = 0.5
+    else:
+        raise Exception('No parameters')
 else:
     neighbor_search_dist = 15
     ka = 3
@@ -63,7 +92,12 @@ if use_dhm:
     sub_image_gray = image_gray[im_xlim[0]:im_xlim[1], im_ylim[0]:im_ylim[1]]
 
     print('Extracting points')
-    pts = extract_crowns_from_dhm(sub_image_gray)
+    pts = extract_crowns_from_dhm(sub_image_gray,
+                                  max_sigma=max_sigma,
+                                  min_sigma=min_sigma,
+                                  num_sigma=num_sigma,
+                                  threshold=threshold,
+                                  overlap=overlap)
 else:
     grid_base = generate_grid(100, 100, 6, 3)
 
@@ -122,7 +156,7 @@ if use_dhm:
         col = color_map(scores[i])
         if np.isnan(raw_col):
             col = 'dodgerblue'
-        c = plt.Circle((x, y), 5, color=col, linewidth=1, fill=True)
+        c = plt.Circle((x, y), radius=5, color=col, linewidth=1, fill=True)
         ax.add_patch(c)
         #ax.annotate(i, (x, y))
 else:
@@ -157,3 +191,5 @@ if not use_dhm:
     ax[1].scatter(d, scores)
     plt.show()
 """
+
+print('Done')
