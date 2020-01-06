@@ -27,7 +27,7 @@ grids = []
 names = []
 params = []
 
-"""
+
 working = square_grid
 working = peturb_gradational(working, pet_gradient, pet_radius)
 grids.append(working)
@@ -117,8 +117,7 @@ params.append({'neighbor_search_dist': 15,
                'punishment': 1,
                'punish_out_of_hull': False,
                'euc': False,
-               'reorientation': 10e-2})
-
+               'reorientation': 10e-3})
 
 working = rect_grid
 working2 = translate(rect_grid, 3, 3)
@@ -164,7 +163,6 @@ params.append({'neighbor_search_dist': 15,
                'punish_out_of_hull': False,
                'euc': False,
                'reorientation': 10e-3})
-"""
 
 working = stamp_pattern(stamp, 8, 8, 100, 100, flip=False, rotate_by=2)
 working = peturb_gradational(working, pet_gradient, pet_radius)
@@ -175,9 +173,9 @@ params.append({'neighbor_search_dist': 20,
                'coop': 5,
                'punishment': 1,
                'punish_out_of_hull': False,
-               'euc': True,
+               'euc': False,
                'reorientation': 10e-3})
-"""
+
 working = stamp_pattern(stamp, 8, 8, 100, 100, flip=False, rotate_by=0)
 working = peturb_gradational(working, pet_gradient, pet_radius)
 grids.append(working)
@@ -188,8 +186,7 @@ params.append({'neighbor_search_dist': 20,
                'punishment': 1,
                'punish_out_of_hull': False,
                'euc': False,
-               'reorientation': None})
-"""
+               'reorientation': 10e-3})
 
 
 for pts, name, pars in zip(grids, names, params):
