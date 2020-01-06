@@ -27,31 +27,7 @@ grids = []
 names = []
 params = []
 
-
-working = stamp_pattern(stamp, 8, 8, 100, 100, flip=False, rotate_by=2)
-working = peturb_gradational(working, pet_gradient, pet_radius)
-grids.append(working)
-names.append('stamp_rot')
-params.append({'neighbor_search_dist': 20,
-               'ka': 3,
-               'coop': 5,
-               'punishment': 1,
-               'punish_out_of_hull': False,
-               'euc': False,
-               'reorientation': 10e-3})
-
-working = stamp_pattern(stamp, 8, 8, 100, 100, flip=False, rotate_by=0)
-working = peturb_gradational(working, pet_gradient, pet_radius)
-grids.append(working)
-names.append('stamp')
-params.append({'neighbor_search_dist': 20,
-               'ka': 3,
-               'coop': 5,
-               'punishment': 1,
-               'punish_out_of_hull': False,
-               'euc': False,
-               'reorientation': None})
-
+"""
 working = square_grid
 working = peturb_gradational(working, pet_gradient, pet_radius)
 grids.append(working)
@@ -89,18 +65,6 @@ params.append({'neighbor_search_dist': 15,
                'euc': False,
                'reorientation': 10e-3})
 
-working = concentric_circles(12, 0.5, 8)
-working = peturb_gradational(working, pet_gradient, pet_radius)
-grids.append(working)
-names.append('circles')
-params.append({'neighbor_search_dist': 12,
-               'ka': 3,
-               'coop': 5,
-               'punishment': 1,
-               'punish_out_of_hull': False,
-               'euc': False,
-               'reorientation': 10e-3})
-
 working = rect_grid
 working = wavify_grid(working, 5, 75)
 working = peturb_gradational(working, pet_gradient, pet_radius)
@@ -122,6 +86,18 @@ working = peturb_gradational(working, pet_gradient, pet_radius)
 grids.append(working)
 names.append('wavy_grid_complex')
 params.append({'neighbor_search_dist': 15,
+               'ka': 3,
+               'coop': 5,
+               'punishment': 1,
+               'punish_out_of_hull': False,
+               'euc': False,
+               'reorientation': 10e-3})
+"""
+working = concentric_circles(12, 0.5, 8)
+working = peturb_gradational(working, pet_gradient, pet_radius)
+grids.append(working)
+names.append('circles')
+params.append({'neighbor_search_dist': 12,
                'ka': 3,
                'coop': 5,
                'punishment': 1,
@@ -188,6 +164,30 @@ params.append({'neighbor_search_dist': 15,
                'punish_out_of_hull': False,
                'euc': False,
                'reorientation': 10e-3})
+
+working = stamp_pattern(stamp, 8, 8, 100, 100, flip=False, rotate_by=2)
+working = peturb_gradational(working, pet_gradient, pet_radius)
+grids.append(working)
+names.append('stamp_rot')
+params.append({'neighbor_search_dist': 20,
+               'ka': 3,
+               'coop': 5,
+               'punishment': 1,
+               'punish_out_of_hull': False,
+               'euc': False,
+               'reorientation': 10e-3})
+
+working = stamp_pattern(stamp, 8, 8, 100, 100, flip=False, rotate_by=0)
+working = peturb_gradational(working, pet_gradient, pet_radius)
+grids.append(working)
+names.append('stamp')
+params.append({'neighbor_search_dist': 20,
+               'ka': 3,
+               'coop': 5,
+               'punishment': 1,
+               'punish_out_of_hull': False,
+               'euc': False,
+               'reorientation': None})
 
 
 for pts, name, pars in zip(grids, names, params):
