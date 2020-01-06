@@ -1,7 +1,7 @@
 import numpy as np
 from sklearn.neighbors import NearestNeighbors
 
-from neighborhood_funcs import *
+from neighborhood_funcs import compare_scatters
 
 """
 Courtesy of Clay Flannigan (https://github.com/ClayFlannigan/icp/blob/master/icp.py)
@@ -70,23 +70,20 @@ def nearest_neighbor(src, dst):
     return distances.ravel(), indices.ravel()
 
 
-def icp(A, B, init_pose=None, max_iterations=20, tolerance=0.001, distance_metric='euclidean'):
-    '''
-    The Iterative Closest Point method: finds best-fit transform that maps points A on to points B
-    Input:
-        A: Nxm numpy array of source mD points
-        B: Nxm numpy array of destination mD point
-        init_pose: (m+1)x(m+1) homogeneous transformation
-        max_iterations: exit algorithm after max_iterations
-        tolerance: convergence criteria
-    Output:
-        T: final homogeneous transformation that maps A on to B
-        distances: Euclidean distances (errors) of the nearest neighbor
-        i: number of iterations to converge
-    '''
+def cut_points_down(A, B, distance_metric='euclidean'):
+    """
+    Registers points in two two sets of data and then cuts out the unmatched points
 
-    #assert A.shape == B.shape
 
+    Args:
+        A: a matrix
+        B: another matrix
+        distance_metric: registration metric
+
+    Returns:
+        Both data sets, but with unregistered points removed from the larger set
+
+    """
     reordered = False
     if len(A) > len(B):
         reordered = True
@@ -104,6 +101,28 @@ def icp(A, B, init_pose=None, max_iterations=20, tolerance=0.001, distance_metri
     A_matched = np.array(A_matched)
     B_matched = np.array(B_matched)
 
+    return A_matched, B_matched
+
+
+def icp(A, B, init_pose=None, max_iterations=20, tolerance=0.001, distance_metric='euclidean'):
+    '''
+    The Iterative Closest Point method: finds best-fit transform that maps points A on to points B
+    Input:
+        A: Nxm numpy array of source mD points
+        B: Nxm numpy array of destination mD point
+        init_pose: (m+1)x(m+1) homogeneous transformation
+        max_iterations: exit algorithm after max_iterations
+        tolerance: convergence criteria
+    Output:
+        T: final homogeneous transformation that maps A on to B
+        distances: Euclidean distances (errors) of the nearest neighbor
+        i: number of iterations to converge
+    '''
+
+    #assert A.shape == B.shape
+
+    A_matched, B_matched = cut_points_down(A, B, distance_metric=distance_metric)
+
     # get number of dimensions
     m = A_matched.shape[1]
 
@@ -120,6 +139,8 @@ def icp(A, B, init_pose=None, max_iterations=20, tolerance=0.001, distance_metri
     prev_error = 0
 
     for i in range(max_iterations):
+        A_matched, B_matched = cut_points_down(A, B, distance_metric=distance_metric)
+
         # find the nearest neighbors between the current source and destination points
         distances, indices = nearest_neighbor(src[:m,:].T, dst[:m,:].T)
 
@@ -139,3 +160,23 @@ def icp(A, B, init_pose=None, max_iterations=20, tolerance=0.001, distance_metri
     T,_,_ = best_fit_transform(A_matched, src[:m,:].T)
 
     return T, distances, i
+
+
+def realign_points(A, B, distance_metric='euclidean', tolerance=0.001, max_iterations=20):
+    """
+    ICP realigns points in A to B
+
+    Args:
+        A: a matrix
+        B: another matrix
+        distance_metric: registration metric
+
+    Returns:
+        A realigned to B
+    """
+    t, distances, iterations = icp(A, B, distance_metric=distance_metric, tolerance=tolerance, max_iterations=max_iterations)
+    C = np.ones((len(A), 3))
+    C[:, 0:2] = np.copy(A)
+    readj = np.dot(t, C.T).T
+
+    return readj[:,0:2]

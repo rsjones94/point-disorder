@@ -176,7 +176,9 @@ def compare_scatters(s1, s2, plot=False, distance_metric='euclidean', reorient_t
 
     if reorient_tol:
         #print('Reorienting before comparison...')
-        s2, a, b, c = iterative_procrustes(s1, s2, distance_metric=distance_metric, tol=reorient_tol)
+        #s2, a, b, c = iterative_procrustes(s1, s2, distance_metric=distance_metric, tol=reorient_tol)
+        from icp import realign_points # a nightmarish workaround to circular imports
+        s2 = realign_points(s2, s1, distance_metric=distance_metric, tolerance=reorient_tol, max_iterations=20)
 
     swapped = False
     if len(s1) > len(s2):

@@ -8,6 +8,7 @@ from numpy import linspace
 from tree_extraction import extract_crowns_from_dhm
 from neighborhood_funcs import *
 from pattern_generation import *
+np.random.seed(0)
 
 pet_radius = 40
 pet_gradient = 0.05
@@ -140,7 +141,8 @@ params.append({'neighbor_search_dist': 15,
                'punishment': 1,
                'punish_out_of_hull': False,
                'euc': False,
-               'reorientation': 10e-3})
+               'reorientation': 10e-2})
+
 
 working = rect_grid
 working2 = translate(rect_grid, 3, 3)

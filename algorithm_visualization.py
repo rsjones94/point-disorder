@@ -5,7 +5,7 @@ import scipy
 
 from neighborhood_funcs import *
 from pattern_generation import *
-from icp import icp
+from icp import icp, realign_points
 
 np.random.seed(0)
 poi_1 = 370
@@ -169,10 +169,13 @@ for p in range(min([len(s1), len(s2)])):
 """
 
 ## ICP REALIGNMENT
+"""
 t, distances, iterations = icp(set_2, set_1, distance_metric=distance_metric2)
 C = np.ones((len(set_2), 3))
 C[:, 0:2] = np.copy(set_2)
 set_2_readj = np.dot(t, C.T).T
+"""
+set_2_readj = realign_points(set_2, set_1, distance_metric2)
 ## END ICP REALIGNMENT
 
 ax[1][1].scatter(set_1[:,0], set_1[:,1], color='red', edgecolors='black')
