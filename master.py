@@ -247,10 +247,6 @@ if sensitivity:
 
     kappa_df.to_csv(sens_out)
 
-
-
-
-
 else:
     scores, neighborhoods, scatter_key, score_key = point_disorder_index(pts[:, 0:2],
                                                                          neighbor_search_dist,
