@@ -230,8 +230,10 @@ if sensitivity:
         num_points[r] = len(good_scores)
 
     fig, ax = plt.subplots(2, 1, figsize=(8,12))
-    ax[0].plot(radii, num_points)
-    ax[1].plot(radii, num_neighbors)
+    ax[0].plot(radii, num_points, marker='o')
+    ax[0].set_xlim([0,max(radii)+5])
+    ax[1].plot(radii, num_neighbors, marker='o')
+    ax[1].set_xlim([0,max(radii)+5])
 
     ax[0].set_title(f'Number of points with at least one neighbor')
     ax[1].set_title(f'Average number of neighbors')
