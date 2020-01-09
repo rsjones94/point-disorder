@@ -26,12 +26,13 @@ use_dhm = True
 trees_1 = True
 trees_2 = False
 
-save = False
-sensitivity = True
+save = True
+sensitivity = False
 
 if use_dhm:
     if trees_1:
-        outname = r'C:\Users\rsjon_000\Documents\point-disorder\point_disorder_paper\figures\trees_1.png'
+        outname = r'C:\Users\rj3h\Documents\programming_projects\point-disorder\point_disorder_paper\figures\trees_1.png'
+        #outname = r'C:\Users\rsjon_000\Documents\point-disorder\point_disorder_paper\figures\trees_1.png'
         im_xlim = (1500, 5000)
         im_ylim = (0, 3000)
         im_path = r'F:\entropy_veg\lidar\las_products\USGS_LPC_TN_27County_blk2_2015_2276581SE_LAS_2017\USGS_LPC_TN_27County_blk2_2015_2276581SE_LAS_2017_dhm.tif'
@@ -82,7 +83,8 @@ if use_dhm:
         )
 
     elif trees_2:
-        outname = r'C:\Users\rsjon_000\Documents\point-disorder\point_disorder_paper\figures\trees_2.png'
+        outname = r'C:\Users\rj3h\Documents\programming_projects\point-disorder\point_disorder_paper\figures\trees_2.png'
+        #outname = r'C:\Users\rsjon_000\Documents\point-disorder\point_disorder_paper\figures\trees_2.png'
         im_xlim = (0, 3200)
         im_ylim = (4250, 7000)
         im_path = r'F:\entropy_veg\lidar\las_products\USGS_LPC_TN_27County_blk2_2015_2276581SE_LAS_2017\USGS_LPC_TN_27County_blk2_2015_2276581SE_LAS_2017_dhm.tif'
@@ -229,7 +231,7 @@ if sensitivity:
 
         num_points[r] = len(good_scores)
 
-    fig, ax = plt.subplots(2, 1, figsize=(8,12))
+    fig, ax = plt.subplots(2, 1, figsize=(16,8))
     ax[0].plot(radii, num_points, marker='o')
     ax[0].set_xlim([0,max(radii)+5])
     ax[1].plot(radii, num_neighbors, marker='o')
@@ -250,6 +252,7 @@ if sensitivity:
     kappa_df.to_csv(sens_out)
 
 else:
+
     scores, neighborhoods, scatter_key, score_key = point_disorder_index(pts[:, 0:2],
                                                                          neighbor_search_dist,
                                                                          ka=ka,
@@ -264,7 +267,7 @@ else:
     norm = plt.Normalize(0, 1)
     sm = ScalarMappable(norm=norm, cmap=color_map)
     if use_dhm:
-        fig, ax = plt.subplots(1, 2, figsize=(12, 8))
+        fig, ax = plt.subplots(1, 2, figsize=(32, 24))
 
         ax[0].imshow(sub_image_gray, cmap='gray')
         ax[1].imshow(sub_image_gray, cmap='gray')
@@ -274,16 +277,16 @@ else:
         ax[0].set_title(f'Threshold = {thresh}')
         # plt.tight_layout()
 
-        line1 = Line2D(range(1), range(1), color="white", marker='o', markerfacecolor="red")
-        line2 = Line2D(range(1), range(1), color="white", marker='o', markerfacecolor="green")
-        line3 = Line2D(range(1), range(1), color="white", marker='o', markerfacecolor="dodgerblue")
+        line1 = Line2D(range(1), range(1), color="white", marker='o', markerfacecolor="red", markeredgecolor='black')
+        line2 = Line2D(range(1), range(1), color="white", marker='o', markerfacecolor="green", markeredgecolor='black')
+        line3 = Line2D(range(1), range(1), color="white", marker='o', markerfacecolor="dodgerblue", markeredgecolor='black')
         lines = [line1, line2, line3]
         line_names = ['Above threshold ("disordered")', 'Below threshold ("ordered")', 'Insufficient neighborhood']
         if plot_planted:
             lines.append(Line2D(range(1), range(1), color="purple"))
             line_names.append('Planted area')
 
-        ax[0].legend(lines, line_names, numpoints=1, loc=1, prop={'size': 5})
+        ax[0].legend(lines, line_names, numpoints=1, loc=1, prop={'size': 12})
 
         for i, tree in enumerate(pts):
             x, y, r = tree
@@ -297,9 +300,9 @@ else:
             if np.isnan(raw_col):
                 col = 'dodgerblue'
                 threshcol = 'dodgerblue'
-            c = plt.Circle((x, y), radius=5, color=col, linewidth=1, fill=True)
+            c = plt.Circle((x, y), radius=5, color=col, linewidth=1, fill=True, edgecolor='black')
             ax[1].add_patch(c)
-            c = plt.Circle((x, y), radius=5, color=threshcol, linewidth=1, fill=True)
+            c = plt.Circle((x, y), radius=5, color=threshcol, linewidth=1, fill=True, edgecolor='black')
             ax[0].add_patch(c)
             # ax.annotate(i, (x, y))
         ax[0].set_aspect('equal')
@@ -311,11 +314,11 @@ else:
                 ax[0].plot(shape[:,0], shape[:,1], color='purple', linewidth=2)
                 ax[1].plot(shape[:,0], shape[:,1], color='purple', linewidth=2)
 
-        cbar = fig.colorbar(sm, ax=ax, fraction=0.02)
+        cbar = fig.colorbar(sm, ax=ax, fraction=0.02, use_gridspec=True)
         cbar.ax.set_title('IoD')
 
     else:
-        fig, ax = plt.subplots(1, 1, figsize=(12, 8))
+        fig, ax = plt.subplots(1, 1, figsize=(16, 12))
         ax.scatter(pts[:, 0], pts[:, 1], c=scores, cmap=color_map, vmin=0, vmax=1, edgecolors='black')
         # for i,(x,y) in enumerate(pts):
         #    ax.annotate(i, (x, y))
@@ -325,7 +328,7 @@ else:
         ax.set_aspect('equal')
         plt.tight_layout()
 
-        cbar = fig.colorbar(sm, ax=ax)
+        cbar = fig.colorbar(sm, ax=ax, use_gridspec=True)
         cbar.ax.set_title('IoD')
 
     plt.show()
