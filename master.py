@@ -23,10 +23,11 @@ a "GLCM" but for a point cloud instead of rasters. "directionality" to disorder
 
 use_dhm = True
 
-trees_1 = True
+trees_1 = False
 trees_2 = False
+trees_3 = True
 
-save = True
+save = False
 sensitivity = False
 
 if use_dhm:
@@ -82,9 +83,11 @@ if use_dhm:
         ]
         )
 
+
     elif trees_2:
+
         outname = r'C:\Users\rj3h\Documents\programming_projects\point-disorder\point_disorder_paper\figures\trees_2.png'
-        #outname = r'C:\Users\rsjon_000\Documents\point-disorder\point_disorder_paper\figures\trees_2.png'
+        # outname = r'C:\Users\rsjon_000\Documents\point-disorder\point_disorder_paper\figures\trees_2.png'
         im_xlim = (0, 3200)
         im_ylim = (4250, 7000)
         im_path = r'F:\entropy_veg\lidar\las_products\USGS_LPC_TN_27County_blk2_2015_2276581SE_LAS_2017\USGS_LPC_TN_27County_blk2_2015_2276581SE_LAS_2017_dhm.tif'
@@ -92,12 +95,36 @@ if use_dhm:
         neighbor_search_dist = 80
         ka = 15
         coop = 10
+
         punishment = 1
         punish_out_of_hull = False
         euc = False
         reorientation = None
         max_sigma = 50
         min_sigma = 10
+        num_sigma = 10
+        threshold = 5
+        overlap = 0.5
+
+        plot_planted = False
+        thresh = 0.5
+
+    elif trees_3:
+        outname = r'C:\Users\rj3h\Documents\programming_projects\point-disorder\point_disorder_paper\figures\trees_3.png'
+        #outname = r'C:\Users\rsjon_000\Documents\point-disorder\point_disorder_paper\figures\trees_3.png'
+        im_xlim = (2200, 5300)
+        im_ylim = (1800, 3900)
+        im_path = r'F:\entropy_veg\lidar\atwell\las_products\dhm.tif'
+
+        neighbor_search_dist = 40
+        ka = 5
+        coop = 5
+        punishment = 1
+        punish_out_of_hull = False
+        euc = False
+        reorientation = None
+        max_sigma = 20
+        min_sigma = 5
         num_sigma = 10
         threshold = 5
         overlap = 0.5
