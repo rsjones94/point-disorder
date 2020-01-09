@@ -116,8 +116,8 @@ if use_dhm:
         im_ylim = (1800, 3900)
         im_path = r'F:\entropy_veg\lidar\atwell\las_products\dhm.tif'
 
-        neighbor_search_dist = 40
-        ka = 5
+        neighbor_search_dist = 50
+        ka = 8
         coop = 5
         punishment = 1
         punish_out_of_hull = False
@@ -131,7 +131,7 @@ if use_dhm:
 
         plot_planted = False
 
-        thresh = 0.5
+        thresh = 0.7
     else:
         raise Exception('No parameters')
 else:
@@ -168,6 +168,7 @@ if use_dhm:
     sub_image_gray = image_gray[im_xlim[0]:im_xlim[1], im_ylim[0]:im_ylim[1]]
 
     print('Extracting points')
+
     pts = extract_crowns_from_dhm(sub_image_gray,
                                   max_sigma=max_sigma,
                                   min_sigma=min_sigma,
