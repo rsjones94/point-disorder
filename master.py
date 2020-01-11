@@ -32,8 +32,8 @@ sensitivity = False
 
 if use_dhm:
     if trees_1:
-        outname = r'C:\Users\rj3h\Documents\programming_projects\point-disorder\point_disorder_paper\figures\trees_1.png'
-        #outname = r'C:\Users\rsjon_000\Documents\point-disorder\point_disorder_paper\figures\trees_1.png'
+        #outname = r'C:\Users\rj3h\Documents\programming_projects\point-disorder\point_disorder_paper\figures\trees_1.png'
+        outname = r'C:\Users\rsjon_000\Documents\point-disorder\point_disorder_paper\figures\trees_1.png'
         im_xlim = (1500, 5000)
         im_ylim = (0, 3000)
         im_path = r'F:\entropy_veg\lidar\las_products\USGS_LPC_TN_27County_blk2_2015_2276581SE_LAS_2017\USGS_LPC_TN_27County_blk2_2015_2276581SE_LAS_2017_dhm.tif'
@@ -86,8 +86,8 @@ if use_dhm:
 
     elif trees_2:
 
-        outname = r'C:\Users\rj3h\Documents\programming_projects\point-disorder\point_disorder_paper\figures\trees_2.png'
-        # outname = r'C:\Users\rsjon_000\Documents\point-disorder\point_disorder_paper\figures\trees_2.png'
+        #outname = r'C:\Users\rj3h\Documents\programming_projects\point-disorder\point_disorder_paper\figures\trees_2.png'
+        outname = r'C:\Users\rsjon_000\Documents\point-disorder\point_disorder_paper\figures\trees_2.png'
         im_xlim = (0, 3200)
         im_ylim = (4250, 7000)
         im_path = r'F:\entropy_veg\lidar\las_products\USGS_LPC_TN_27County_blk2_2015_2276581SE_LAS_2017\USGS_LPC_TN_27County_blk2_2015_2276581SE_LAS_2017_dhm.tif'
@@ -110,28 +110,37 @@ if use_dhm:
         thresh = 0.5
 
     elif trees_3:
-        outname = r'C:\Users\rj3h\Documents\programming_projects\point-disorder\point_disorder_paper\figures\trees_3.png'
-        #outname = r'C:\Users\rsjon_000\Documents\point-disorder\point_disorder_paper\figures\trees_3.png'
+        #outname = r'C:\Users\rj3h\Documents\programming_projects\point-disorder\point_disorder_paper\figures\trees_3.png'
+        outname = r'C:\Users\rsjon_000\Documents\point-disorder\point_disorder_paper\figures\trees_3.png'
         im_xlim = (2200, 5300)
         im_ylim = (1800, 3900)
         im_path = r'F:\entropy_veg\lidar\atwell\las_products\dhm.tif'
 
-        neighbor_search_dist = 50
-        ka = 8
-        coop = 5
+        neighbor_search_dist = 40
+        ka = 5
+        coop = 3
         punishment = 1
         punish_out_of_hull = False
         euc = False
         reorientation = None
+
+        """
         max_sigma = 20
-        min_sigma = 5
+        min_sigma = 7
+        num_sigma = 10
+        threshold = 5 # min tree height
+        overlap = 0.4
+        thresh = 0.7 # disorder cutoff
+        """
+        max_sigma = 20
+        min_sigma = 7
         num_sigma = 10
         threshold = 5
-        overlap = 0.5
+        overlap = 0.6
+        thresh = 0.75
 
         plot_planted = False
 
-        thresh = 0.7
     else:
         raise Exception('No parameters')
 else:
