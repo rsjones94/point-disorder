@@ -216,7 +216,7 @@ for pts, name, pars in zip(grids, names, params):
     ax[0].add_patch(c2)
     # for i,(x,y) in enumerate(pts):
     #    ax.annotate(i, (x, y))
-    ax[0].set_title(f'r={neighbor_search_dist}, ka={ka}, coop={coop}\n'
+    ax[0].set_title(f'r={neighbor_search_dist}, km={ka}, coop={coop}\n'
                     f'punishment={punishment}, punish_out_of_hull={punish_out_of_hull}\n'
                     f'euc={euc}, reorientation=None')
     ax[0].set_aspect('equal')
@@ -236,7 +236,7 @@ for pts, name, pars in zip(grids, names, params):
     ax[1].add_patch(c2)
     # for i,(x,y) in enumerate(pts):
     #    ax.annotate(i, (x, y))
-    ax[1].set_title(f'r={neighbor_search_dist}, ka={ka}, coop={coop}\n'
+    ax[1].set_title(f'r={neighbor_search_dist}, km={ka}, coop={coop}\n'
                     f'punishment={punishment}, punish_out_of_hull={punish_out_of_hull}\n'
                     f'euc={euc}, reorientation={reorientation}')
     ax[1].set_aspect('equal')
