@@ -116,9 +116,6 @@ if use_dhm:
         im_ylim = (1800, 3900)
         im_path = r'F:\entropy_veg\lidar\atwell\las_products\dhm.tif'
 
-        neighbor_search_dist = 40
-        ka = 5
-        coop = 3
         punishment = 1
         punish_out_of_hull = False
         euc = False
@@ -131,7 +128,22 @@ if use_dhm:
         threshold = 5 # min tree height
         overlap = 0.4
         thresh = 0.7 # disorder cutoff
+        
+        neighbor_search_dist = 40
+        ka = 5
+        coop = 3
+        max_sigma = 20
+        min_sigma = 7
+        num_sigma = 10
+        threshold = 5
+        overlap = 0.6
+        thresh = 0.75
         """
+
+        neighbor_search_dist = 1
+        ka = 5
+        coop = 3
+
         max_sigma = 20
         min_sigma = 7
         num_sigma = 10
@@ -139,7 +151,28 @@ if use_dhm:
         overlap = 0.6
         thresh = 0.75
 
-        plot_planted = False
+        plot_planted = True
+
+        aoi = np.array([
+            np.array([
+                np.array([288, 327]),
+                np.array([641, 140]),
+                np.array([889, 121]),
+                np.array([915, 308]),
+                np.array([832, 296]),
+                np.array([743, 226]),
+                np.array([686, 200]),
+                np.array([670, 251]),
+                np.array([482, 340]),
+                np.array([320, 330]),
+            ]),
+            np.array([
+                np.array([1000, 1000]),
+                np.array([1100, 1000]),
+                np.array([1050, 1050]),
+            ])
+        ]
+        )
 
     else:
         raise Exception('No parameters')
