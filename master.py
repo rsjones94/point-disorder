@@ -361,7 +361,8 @@ if sensitivity:
     num_points = pd.Series(index=radii)
 
     for i,(r,k) in enumerate(r_k):
-        print(f'\n\nSENSITIVITY: {i+1} of {len(r_k)}\n\n')
+        print(f'\n\nSENSITIVITY: {i+1} of {len(r_k)}\n'
+              f'RADIUS: {r}, Km: {k}\n\n')
 
         scores, neighborhoods, scatter_key, score_key = point_disorder_index(pts[:, 0:2],
                                                                              r,
