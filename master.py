@@ -28,7 +28,7 @@ trees_2 = False
 trees_3 = True
 
 save = False
-sensitivity = False
+sensitivity = True
 
 if use_dhm:
     if trees_1:
@@ -140,8 +140,8 @@ if use_dhm:
         thresh = 0.75
         """
 
-        neighbor_search_dist = 1
-        ka = 5
+        neighbor_search_dist = 15
+        ka = 1.6
         coop = 3
 
         max_sigma = 20
@@ -164,16 +164,93 @@ if use_dhm:
                 np.array([686, 200]),
                 np.array([670, 251]),
                 np.array([482, 340]),
-                np.array([320, 330]),
+                np.array([320, 330])
             ]),
             np.array([
-                np.array([1000, 1000]),
-                np.array([1100, 1000]),
-                np.array([1050, 1050]),
+                np.array([385, 463]),
+                np.array([283, 1270]),
+                np.array([235, 1643]),
+                np.array([130, 1979]),
+                np.array([55, 2515]),
+                np.array([155, 2571]),
+                np.array([690, 1885]),
+                np.array([995, 926]),
+                np.array([952, 689]),
+                np.array([827, 826]),
+                np.array([821, 939]),
+                np.array([773, 1027]),
+                np.array([724, 1001]),
+                np.array([707, 866]),
+                np.array([662, 870]),
+                np.array([659, 1007]),
+                np.array([671, 1431]),
+                np.array([652, 1543]),
+                np.array([472, 1854]),
+                np.array([416, 1879]),
+                np.array([310, 1836]),
+                np.array([578, 1082]),
+                np.array([628, 1051]),
+                np.array([647, 789]),
+                np.array([647, 353])
+            ]),
+            np.array([
+                np.array([105, 2751]),
+                np.array([167, 2770]),
+                np.array([250, 2674]),
+                np.array([401, 2662]),
+                np.array([634, 2633]),
+                np.array([786, 2409]),
+                np.array([653, 2347]),
+                np.array([834, 2149]),
+                np.array([887, 2026]),
+                np.array([1052, 1593]),
+                np.array([1027, 1499]),
+                np.array([1064, 1356]),
+                np.array([1214, 889]),
+                np.array([1263, 789]),
+                np.array([1269, 627]),
+                np.array([1045, 702]),
+                np.array([1064, 876]),
+                np.array([758, 1779]),
+                np.array([696, 1948]),
+                np.array([354, 2421])
+            ]),
+            np.array([
+                np.array([1550, 1099]),
+                np.array([1351, 1376]),
+                np.array([1343, 1698]),
+                np.array([1298, 1918]),
+                np.array([1367, 1971]),
+                np.array([1502, 1999]),
+                np.array([1958, 1987]),
+                np.array([1938, 1775]),
+                np.array([1815, 1531]),
+                np.array([1779, 1539]),
+                np.array([1754, 1352]),
+                np.array([1669, 1193])
+            ]),
+            np.array([
+                np.array([1545, 854]),
+                np.array([1429, 1063]),
+                np.array([1582, 1075]),
+                np.array([1758, 1162]),
+                np.array([1612, 852])
+            ]),
+            np.array([
+                np.array([1549, 586]),
+                np.array([1786, 999]),
+                np.array([1826, 1037]),
+                np.array([1902, 1392]),
+                np.array([1942, 1418]),
+                np.array([1965, 1354]),
+                np.array([1939, 967]),
+                np.array([1923, 614]),
+                np.array([1878, 459])
             ])
         ]
         )
 
+        aoi = aoi * .3048
     else:
         raise Exception('No parameters')
 else:
@@ -217,6 +294,9 @@ if use_dhm:
                                   num_sigma=num_sigma,
                                   threshold=threshold,
                                   overlap=overlap)
+
+    if trees_3:
+        pts = pts * .3048
 else:
     grid_base = generate_grid(100, 100, 6, 3)
 
@@ -251,11 +331,20 @@ else:
     # pts = decimate_grid(pts, 0.7)
 
 if sensitivity:
-    pts_out = r'C:\Users\rsjon_000\Documents\point-disorder\point_disorder_paper\figures\pts_as_fxn_of_radius.png'
-    sens_out = r'C:\Users\rsjon_000\Documents\point-disorder\point_disorder_paper\figures\sensitivity.csv'
+    if trees_1:
+        pts_out = r'C:\Users\rsjon_000\Documents\point-disorder\point_disorder_paper\figures\pts_as_fxn_of_radius1.png'
+        sens_out = r'C:\Users\rsjon_000\Documents\point-disorder\point_disorder_paper\figures\sensitivity1.csv'
+        radii = np.arange(30, 160, 10)
+        kas = np.arange(1, 22, 2)
+    elif trees_3:
+        pts_out = r'C:\Users\rsjon_000\Documents\point-disorder\point_disorder_paper\figures\pts_as_fxn_of_radius3.png'
+        sens_out = r'C:\Users\rsjon_000\Documents\point-disorder\point_disorder_paper\figures\sensitivity3.csv'
+        radii = np.arange(5, 60, 5)
+        kas = np.arange(0.25, 4, 0.25)
+    else:
+        raise Exception('Improper parameterization: must be trees_1 or trees_3')
 
-    radii = np.arange(30, 160, 10)
-    kas = np.arange(1, 22, 2)
+
 
     r_k = [(a, b) for a in radii for b in kas]
     kappas = []
@@ -338,10 +427,13 @@ else:
     sm = ScalarMappable(norm=norm, cmap=color_map)
     if use_dhm:
         fig, ax = plt.subplots(1, 2, figsize=(32, 24))
-
-        ax[0].imshow(sub_image_gray, cmap='gray')
-        ax[1].imshow(sub_image_gray, cmap='gray')
-        ax[1].set_title(f'r={neighbor_search_dist}, ka={ka}, coop={coop}\n'
+        if trees_3:
+            ax[0].imshow(sub_image_gray, cmap='gray', extent=(0, (im_ylim[1]-im_ylim[0])*.3048, (im_xlim[1]-im_xlim[0])*.3048, 0))
+            ax[1].imshow(sub_image_gray, cmap='gray', extent=(0, (im_ylim[1]-im_ylim[0])*.3048, (im_xlim[1]-im_xlim[0])*.3048, 0))
+        else:
+            ax[0].imshow(sub_image_gray, cmap='gray')
+            ax[1].imshow(sub_image_gray, cmap='gray')
+        ax[1].set_title(f'r={neighbor_search_dist}, km={ka}, coop={coop}\n'
                         f'punishment={punishment}, punish_out_of_hull={punish_out_of_hull}\n'
                         f'euc={euc}, reorientation={reorientation}')
         ax[0].set_title(f'Threshold = {thresh}')
@@ -370,9 +462,12 @@ else:
             if np.isnan(raw_col):
                 col = 'dodgerblue'
                 threshcol = 'dodgerblue'
-            c = plt.Circle((x, y), radius=5, color=col, linewidth=1, fill=True, edgecolor='black')
+            rad = 5
+            if trees_3:
+                rad = rad * .3048
+            c = plt.Circle((x, y), radius=rad, color=col, linewidth=1, fill=True, edgecolor='black')
             ax[1].add_patch(c)
-            c = plt.Circle((x, y), radius=5, color=threshcol, linewidth=1, fill=True, edgecolor='black')
+            c = plt.Circle((x, y), radius=rad, color=threshcol, linewidth=1, fill=True, edgecolor='black')
             ax[0].add_patch(c)
             # ax.annotate(i, (x, y))
         ax[0].set_aspect('equal')
@@ -381,8 +476,11 @@ else:
         if plot_planted:
             for shape in aoi:
                 shape = np.vstack([shape,shape[0]])
-                ax[0].plot(shape[:,0], shape[:,1], color='purple', linewidth=2)
-                ax[1].plot(shape[:,0], shape[:,1], color='purple', linewidth=2)
+                wid = 2
+                if trees_3:
+                    wid = 3
+                ax[0].plot(shape[:,0], shape[:,1], color='purple', linewidth=wid)
+                ax[1].plot(shape[:,0], shape[:,1], color='purple', linewidth=wid)
 
         cbar = fig.colorbar(sm, ax=ax, fraction=0.02, use_gridspec=True)
         cbar.ax.set_title('IoD')
