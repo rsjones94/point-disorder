@@ -339,8 +339,8 @@ if sensitivity:
     elif trees_3:
         pts_out = r'C:\Users\rsjon_000\Documents\point-disorder\point_disorder_paper\figures\pts_as_fxn_of_radius3.png'
         sens_out = r'C:\Users\rsjon_000\Documents\point-disorder\point_disorder_paper\figures\sensitivity3.csv'
-        radii = np.arange(5, 60, 5)
-        kas = np.arange(0.25, 4, 0.25)
+        radii = np.arange(5, 45, 5)
+        kas = np.arange(0.25, 5, 0.25)
     else:
         raise Exception('Improper parameterization: must be trees_1 or trees_3')
 
