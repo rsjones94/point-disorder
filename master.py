@@ -25,7 +25,7 @@ use_dhm = True
 
 trees_1 = False
 trees_2 = False
-trees_3 = True
+trees_3 = False
 
 save = True
 sensitivity = False
