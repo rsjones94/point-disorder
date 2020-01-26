@@ -12,8 +12,8 @@ from neighborhood_funcs import *
 from pattern_generation import *
 
 
-file = r"F:\entropy_veg\building_footprints\tn_footprint\footprint_pts_repro.shp"
-out_file = r"F:\entropy_veg\building_footprints\tn_footprint\footprint_pts_repro_scored.shp"
+file = r"F:\entropy_veg\building_footprints\tn_footprint\koordinates_data\footprints_sylvan_hillswest_lockeland.shp"
+out_file = r"F:\entropy_veg\building_footprints\tn_footprint\koordinates_data\footprints_sylvan_hillswest_lockeland_SCORED.shp"
 df = gpd.read_file(file)
 
 
@@ -21,7 +21,8 @@ xmin = -1110441 - 5000
 xmax = xmin + 8000 + 5000
 ymin = 4148855 - 5000
 ymax = ymin + 8000 + 5000
-filt = df.cx[xmin:xmax, ymin:ymax]
+
+filt = df
 
 pars = {'neighbor_search_dist': 100,
                'ka': 10,
@@ -31,7 +32,7 @@ pars = {'neighbor_search_dist': 100,
                'euc': False,
                'reorientation': None}
 
-pts = np.array([np.array([x,y]) for x,y in zip(list(filt.geometry.x),list(filt.geometry.y))])
+pts = np.array([np.array([x,y]) for x,y in zip(list(filt.geometry.centroid.x),list(filt.geometry.centroid.y))])
 
 neighbor_search_dist = pars['neighbor_search_dist']
 ka = pars['ka']
@@ -41,7 +42,7 @@ punish_out_of_hull = pars['punish_out_of_hull']
 euc = pars['euc']
 reorientation = pars['reorientation']
 
-name = 'memphis'
+name = 'nashville'
 
 scores, neighborhoods, scatter_key, score_key = point_disorder_index(pts[:, 0:2],
                                                                      neighbor_search_dist,
