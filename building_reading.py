@@ -13,7 +13,8 @@ from neighborhood_funcs import *
 from pattern_generation import *
 
 
-base_file = r"F:\entropy_veg\building_footprints\tn_footprint\koordinates_data\footprints_sylvan_hillswest_lockeland"
+#base_file = r"F:\entropy_veg\building_footprints\tn_footprint\koordinates_data\footprints_sylvan_hillswest_lockeland"
+base_file = r"F:\entropy_veg\building_footprints\tn_footprint\koordinates_data\footprints_lockeland"
 
 
 
@@ -24,9 +25,15 @@ file = base_file + '.shp'
 df = gpd.read_file(file)
 filt = df
 
-pars = {'neighbor_search_dist': 15,
-               'ka': 5,
-               'coop': 3,
+#25, 7, 3 = .33
+#23, 7, 3 = .36
+#23, 8, 3 = .36
+#21, 7, 3 = .38
+#21, 7, 5 = .39
+
+pars = {'neighbor_search_dist': 21,
+               'ka': 7,
+               'coop': 5,
                'punishment': 1,
                'punish_out_of_hull': False,
                'euc': False,
@@ -53,7 +60,7 @@ scores, neighborhoods, scatter_key, score_key = point_disorder_index(pts[:, 0:2]
                                                                      euclidean=euc,
                                                                      reorient_tol=reorientation)
 
-"""
+
 fig, ax = plt.subplots(1, 1, figsize=(16, 8))
 color_map = cm.get_cmap('RdYlGn_r')
 im1 = ax.scatter(pts[:, 0], pts[:, 1], c=scores, cmap=color_map, vmin=0, vmax=1, edgecolors='black')
@@ -71,8 +78,8 @@ sm = ScalarMappable(norm=norm, cmap=color_map)
 cbar = fig.colorbar(sm, ax=ax)
 cbar.ax.set_title('IoD')
 
-fig.savefig(f'C:\\Users\\rsjon_000\\Documents\\point-disorder\\point_disorder_paper\\figures\\{name}.png')
-"""
+#fig.savefig(f'C:\\Users\\rsjon_000\\Documents\\point-disorder\\point_disorder_paper\\figures\\{name}.png')
+
 
 filt['iod'] = scores
 
@@ -83,7 +90,7 @@ filt.boxplot('iod', 'is_major')
 is_major_mean = filt[maj].iod.mean()
 other_mean = filt[~maj].iod.mean()
 
-thresh = np.mean([is_major_mean, other_mean])
+thresh = np.average([is_major_mean, other_mean], 0, [1, 5])
 classified_as_aux = filt.iod > thresh
 
 kappa = metrics.cohen_kappa_score(classified_as_aux, ~maj)
@@ -91,5 +98,5 @@ kappa = metrics.cohen_kappa_score(classified_as_aux, ~maj)
 print(f'KAPPA: {round(kappa,2)}')
 
 
-out_file = base_file + f'_SCORED_ka{ka}coop{coop}r{neighbor_search_dist}kappa{kappa}.shp'
+out_file = base_file + f'_SCORED_ka{ka}coop{coop}r{neighbor_search_dist}kappa{round(kappa,2)}thresh{round(thresh,2)}.shp'
 filt.to_file(out_file)
