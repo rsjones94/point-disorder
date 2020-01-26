@@ -153,7 +153,7 @@ else:
     fig, ax = plt.subplots(1, 2, figsize=(16, 8))
     color_map = cm.get_cmap('RdYlGn_r')
     im1 = ax[1].scatter(pts[:, 0], pts[:, 1], c=scores, cmap=color_map, vmin=0, vmax=1, edgecolors='black')
-    ax[1].set_title(f'r={neighbor_search_dist}, ka={ka}, coop={coop}\n'
+    ax[1].set_title(f'r={neighbor_search_dist}, km={ka}, coop={coop}\n'
                     f'punishment={punishment}, punish_out_of_hull={punish_out_of_hull}\n'
                     f'euc={euc}, reorientation={reorientation}')
     ax[1].set_aspect('equal')
