@@ -27,8 +27,8 @@ trees_1 = False
 trees_2 = False
 trees_3 = True
 
-save = False
-sensitivity = True
+save = True
+sensitivity = False
 
 if use_dhm:
     if trees_1:
@@ -140,8 +140,8 @@ if use_dhm:
         thresh = 0.75
         """
 
-        neighbor_search_dist = 15
-        ka = 1.6
+        neighbor_search_dist = 25
+        ka = 2
         coop = 3
 
         max_sigma = 20
