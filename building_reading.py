@@ -18,7 +18,7 @@ from pattern_generation import *
 
 #base_file = r"F:\entropy_veg\building_footprints\tn_footprint\koordinates_data\footprints_sylvan_hillswest_lockeland"
 base_file = r"F:\entropy_veg\building_footprints\tn_footprint\koordinates_data\footprints_lockeland"
-sensitivity = True
+sensitivity = False
 thresh = 0.7
 
 
@@ -36,7 +36,7 @@ filt = df
 
 
 pars = {'neighbor_search_dist': 21,
-               'ka': 7,
+               'ka': 6.5,
                'coop': 5,
                'punishment': 1,
                'punish_out_of_hull': False,
@@ -92,7 +92,6 @@ if sensitivity:
         other_mean = filt[~maj].iod.mean()
 
         #thresh = np.average([is_major_mean, other_mean], 0, [1, 3])
-        thresh = 0.7
         classified_as_aux = filt.iod >= thresh
 
         kappa = metrics.cohen_kappa_score(classified_as_aux, ~maj)
@@ -134,10 +133,15 @@ else:
     is_major_mean = filt[maj].iod.mean()
     other_mean = filt[~maj].iod.mean()
 
-    thresh = np.average([is_major_mean, other_mean], 0, [1, 3])
-    classified_as_aux = filt.iod > thresh
+    #thresh = np.average([is_major_mean, other_mean], 0, [1, 3])
+    classified_as_aux = [i > thresh if not np.isnan(i) else np.nan for i in filt.iod]
 
-    kappa = metrics.cohen_kappa_score(classified_as_aux, ~maj)
+    aux_dict = {'classed_aux': classified_as_aux,
+                'is_aux': ~maj}
+    aux_df = pd.DataFrame(aux_dict)
+    aux_df = aux_df.dropna()
+    aux_df['classed_aux'] = pd.Series(aux_df['classed_aux'], dtype=bool)
+    kappa = metrics.cohen_kappa_score(aux_df['classed_aux'], aux_df['is_aux'])
 
     print(f'KAPPA: {round(kappa,2)}')
 
@@ -159,18 +163,25 @@ else:
     cbar = fig.colorbar(sm, ax=ax, fraction=0.02, use_gridspec=True)
     cbar.ax.set_title('IoD')
 
-    assessment = [actual-classified for actual, classified in zip(~maj*2, classified_as_aux*1)]
+    assessment = [actual-classified for actual, classified in zip(aux_df['is_aux']*2, aux_df['classed_aux']*1)]
     assessment_map = {1:'TP',
                       -1:'FP',
                       2:'FN',
                       0:'TN'}
     assessment = [assessment_map[assess] for assess in assessment]
-    assessment_cols_map = {'TP':'firebrick',
-                           'TN': 'darkgreen',
-                           'FP': 'limegreen',
-                           'FN': 'orange'}
+    assessment_cols_map = {'TP': 'royalblue',
+                           'TN': 'paleturquoise',
+                           'FP': 'peachpuff',
+                           'FN': 'indianred'}
     col_vec = [assessment_cols_map[assess] for assess in assessment]
-    im0 = ax[0].scatter(pts[:, 0], pts[:, 1], c=col_vec, edgecolors='black')
+
+    pts_dict = {'x': pts[:, 0],
+                'y': pts[:, 1],
+                'scores': scores}
+    pts_df = pd.DataFrame(pts_dict)
+    pts_df = pts_df.dropna()
+
+    im0 = ax[0].scatter(pts_df.x, pts_df.y, c=col_vec, edgecolors='black')
 
     line1 = Line2D(range(1), range(1), color="white", marker='o', markerfacecolor=assessment_cols_map['TP'], markeredgecolor='black')
     line2 = Line2D(range(1), range(1), color="white", marker='o', markerfacecolor=assessment_cols_map['TN'], markeredgecolor='black')
