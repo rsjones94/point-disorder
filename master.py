@@ -25,9 +25,9 @@ use_dhm = True
 
 trees_1 = False
 trees_2 = False
-trees_3 = False
+trees_3 = True
 
-save = True
+save = False
 sensitivity = False
 
 if use_dhm:
@@ -38,8 +38,8 @@ if use_dhm:
         im_ylim = (0, 3000)
         im_path = r'F:\entropy_veg\lidar\las_products\USGS_LPC_TN_27County_blk2_2015_2276581SE_LAS_2017\USGS_LPC_TN_27County_blk2_2015_2276581SE_LAS_2017_dhm.tif'
 
-        neighbor_search_dist = 70
-        ka = 6
+        neighbor_search_dist = 80
+        ka = 5
         coop = 5
         punishment = 1
         punish_out_of_hull = False
@@ -254,9 +254,9 @@ if use_dhm:
     else:
         raise Exception('No parameters')
 else:
-    neighbor_search_dist = 15
-    ka = 3
-    coop = 5
+    neighbor_search_dist = 25
+    ka = 2
+    coop = 3
     punishment = 1
     punish_out_of_hull = False
     euc = False
@@ -348,6 +348,7 @@ if sensitivity:
 
     r_k = [(a, b) for a in radii for b in kas]
     kappas = []
+    accs = []
 
     is_in = []
     for shape in aoi:
@@ -357,6 +358,7 @@ if sensitivity:
     is_in = np.array([any(is_in[:,i]) for i,_ in enumerate(is_in[0])])
 
     kappa_df = pd.DataFrame(index=radii, columns=kas)
+    acc_df = pd.DataFrame(index=radii, columns=kas)
     num_neighbors = pd.Series(index=radii)
     num_points = pd.Series(index=radii)
 
@@ -383,6 +385,10 @@ if sensitivity:
 
         kappa = metrics.cohen_kappa_score(good_is_in, good_thresh)
         kappas.append(kappa)
+
+        acc = metrics.accuracy_score(good_is_in, good_thresh)
+        accs.append(acc)
+        acc_df[k][r] = acc
 
         kappa_df[k][r] = kappa
 
@@ -475,6 +481,14 @@ else:
         ax[1].set_aspect('equal')
 
         if plot_planted:
+
+            is_in = []
+            for shape in aoi:
+                p = Path(shape)
+                is_in.append(p.contains_points(pts[:, 0:2]))
+            is_in = np.vstack(is_in)
+            is_in = np.array([any(is_in[:, i]) for i, _ in enumerate(is_in[0])])
+
             for shape in aoi:
                 shape = np.vstack([shape,shape[0]])
                 wid = 2
@@ -482,6 +496,18 @@ else:
                     wid = 3
                 ax[0].plot(shape[:,0], shape[:,1], color='purple', linewidth=wid)
                 ax[1].plot(shape[:,0], shape[:,1], color='purple', linewidth=wid)
+
+                scores = np.array(scores)
+                under_thresh = np.array([score <= thresh for score in scores])
+                mask = ~np.isnan(scores)
+
+                good_scores = scores[mask]
+                good_thresh = under_thresh[mask]
+                good_is_in = is_in[mask]
+
+                kappa = metrics.cohen_kappa_score(good_is_in, good_thresh)
+                acc = metrics.accuracy_score(good_is_in, good_thresh)
+                print(f'KAPPA: {round(kappa, 2)}, ACC: {round(acc, 2)},')
 
         cbar = fig.colorbar(sm, ax=ax, fraction=0.02, use_gridspec=True)
         cbar.ax.set_title('IoD')

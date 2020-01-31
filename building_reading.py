@@ -18,7 +18,7 @@ from pattern_generation import *
 
 #base_file = r"F:\entropy_veg\building_footprints\tn_footprint\koordinates_data\footprints_sylvan_hillswest_lockeland"
 base_file = r"F:\entropy_veg\building_footprints\tn_footprint\koordinates_data\footprints_lockeland"
-sensitivity = False
+sensitivity = True
 thresh = 0.7
 
 
@@ -88,13 +88,24 @@ if sensitivity:
 
         filt['building_type'] = ['Major' if i else 'Other' for i in filt['is_major']]
 
+        #thresh = np.average([is_major_mean, other_mean], 0, [1, 3])
+
         is_major_mean = filt[maj].iod.mean()
         other_mean = filt[~maj].iod.mean()
 
-        #thresh = np.average([is_major_mean, other_mean], 0, [1, 3])
-        classified_as_aux = filt.iod >= thresh
+        # thresh = np.average([is_major_mean, other_mean], 0, [1, 3])
+        classified_as_aux = [i > thresh if not np.isnan(i) else np.nan for i in filt.iod]
 
-        kappa = metrics.cohen_kappa_score(classified_as_aux, ~maj)
+        aux_dict = {'classed_aux': classified_as_aux,
+                    'is_aux': ~maj}
+        aux_df = pd.DataFrame(aux_dict)
+        aux_df = aux_df.dropna()
+        aux_df['classed_aux'] = pd.Series(aux_df['classed_aux'], dtype=bool)
+        kappa = metrics.cohen_kappa_score(aux_df['classed_aux'], aux_df['is_aux'])
+        acc = metrics.accuracy_score(aux_df['classed_aux'], aux_df['is_aux'])
+
+        print(f'KAPPA: {round(kappa, 2)}, ACC: {round(acc, 2)},')
+
         kappas.append(kappa)
 
         kappa_df[k][r] = kappa
@@ -142,8 +153,9 @@ else:
     aux_df = aux_df.dropna()
     aux_df['classed_aux'] = pd.Series(aux_df['classed_aux'], dtype=bool)
     kappa = metrics.cohen_kappa_score(aux_df['classed_aux'], aux_df['is_aux'])
+    acc = metrics.accuracy_score(aux_df['classed_aux'], aux_df['is_aux'])
 
-    print(f'KAPPA: {round(kappa,2)}')
+    print(f'KAPPA: {round(kappa,2)}, ACC: {round(acc,2)},')
 
 
     out_file = base_file + f'_SCORED_km{ka}coop{coop}r{neighbor_search_dist}kappa{round(kappa,2)}thresh{round(thresh,2)}.shp'
