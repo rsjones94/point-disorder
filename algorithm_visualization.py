@@ -112,9 +112,9 @@ for (pax,pay), distance_metric in zip(plot_positions, d_mecs):
     ax[pax][pay].set(xlabel='Relative x', ylabel='Relative y')
 
 ax[0][0].set_title(f'Neighborhoods, r = {params["neighbor_search_dist"]}')
-ax[0][1].set_title('Euclidean registration\n'
+ax[0][1].set_title('Euclidean assignment\n'
                    f'Score: {round(np.mean(scores[0]),3)}')
-ax[1][0].set_title('Alternative registration\n'
+ax[1][0].set_title('Alternative assignment\n'
                    f'Score: {round(np.mean(scores[1]),3)}')
 
 """
@@ -182,7 +182,7 @@ ax[1][1].scatter(set_1[:,0], set_1[:,1], color='red', edgecolors='black')
 ax[1][1].scatter(set_2_readj[:,0], set_2_readj[:,1], color='blue', edgecolors='black')
 ax[1][1].set_aspect('equal')
 
-# register the realigned points
+# assign the realigned points
 set_2 = set_2_readj[:,0:2]
 pax = 1
 pay = 1
@@ -227,7 +227,7 @@ for simplex in hull.simplices:
 for p in range(min([len(s1), len(s2)])):
     ax[pax][pay].plot([s1[p, 0], s2[assignment[p], 0]], [s1[p, 1], s2[assignment[p], 1]], 'k')
 
-ax[1][1].set_title(f'ICP realignment + alternative registration\n'
+ax[1][1].set_title(f'ICP realignment + alternative assignment\n'
                    f'Score: {round(np.mean(scored_vals),3)}')
 ax[pax][pay].set_aspect('equal')
 ax[pax][pay].set(xlabel='Relative x', ylabel='Relative y')
