@@ -18,7 +18,7 @@ from pattern_generation import *
 
 #base_file = r"F:\entropy_veg\building_footprints\tn_footprint\koordinates_data\footprints_sylvan_hillswest_lockeland"
 base_file = r"F:\entropy_veg\building_footprints\tn_footprint\koordinates_data\footprints_lockeland"
-sensitivity = True
+sensitivity = False
 thresh = 0.7
 
 
@@ -35,7 +35,7 @@ filt = df
 #21, 7, 5 = .39
 
 
-pars = {'neighbor_search_dist': 21,
+pars = {'neighbor_search_dist': 19,
                'ka': 6.5,
                'coop': 5,
                'punishment': 1,
@@ -205,7 +205,9 @@ else:
     ax[0].legend(lines, line_names, numpoints=1, loc=1, prop={'size': 12})
     ax[0].set_aspect('equal')
 
-    ax[0].set_title(f'Threshold = {round(thresh,1)}\n'
-                    f'κ = {round(kappa, 2)}')
+    """ax[0].set_title(f'Threshold = {round(thresh,1)}\n'
+                    f'κ = {round(kappa, 2)}')"""
+
+    ax[0].set_title(f'Threshold = {round(thresh, 1)}')
 
     fig.savefig(f'C:\\Users\\rsjon_000\\Documents\\point-disorder\\point_disorder_paper\\figures\\{name}_kappa{round(kappa,2)}.png')
