@@ -103,6 +103,7 @@ set_1 = neighbors[poi_1]['coords']
 set_2 = neighbors[poi_2]['coords']
 ax[1][1].scatter(set_1[:,0], set_1[:,1], color='salmon', edgecolors='black')
 ax[1][1].scatter(set_2[:,0], set_2[:,1], color='cornflowerblue', edgecolors='black')
+ax[1][1].scatter([0], [0], color='black', marker='x')
 
 
 ax[1][1].set_aspect('equal')
@@ -172,6 +173,8 @@ for p in range(min([len(s1), len(s2)])):
     txt = ax[2][0].text(pt2[0]+.1, pt2[1]+.1, round(score,2))
     txt.set_path_effects([PathEffects.withStroke(linewidth=2, foreground='w')])
 
+ax[2][0].scatter([0], [0], color='black', marker='x')
+
 ax[2][0].set_aspect('equal')
 ax[2][0].set(xlabel='Relative x', ylabel='Relative y')
 ax[2][0].set_title(f'E: Assign correspondence and score \n(Mean: {round(np.mean(scores),2)})')
@@ -192,10 +195,10 @@ for n in n1:
     ax[2][1].scatter(total[n, 0], total[n, 1], color='salmon', edgecolors='black')
 n2 = neighbs[neighb_index2]
 for n in n2:
-    ax[2][1].scatter(total[n, 0], total[n, 1], color='navajowhite', edgecolors='black')
+    ax[2][1].scatter(total[n, 0], total[n, 1], color='blanchedalmond', edgecolors='black')
 common = list(set(n1).intersection(n2))
 for n in common:
-    ax[2][1].scatter(total[n, 0], total[n, 1], color='peru', edgecolors='black')
+    ax[2][1].scatter(total[n, 0], total[n, 1], color='orange', edgecolors='black')
 
 ax[2][1].scatter(total[poi_1,0], total[poi_1,1], color='red', edgecolors='black')
 ax[2][1].scatter(total[neighb_index,0], total[neighb_index,1], color='blue', edgecolors='black')
