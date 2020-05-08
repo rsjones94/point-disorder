@@ -1,17 +1,20 @@
+import string
+
 from skimage import io
 import matplotlib.pyplot as plt
 from matplotlib import cm
 import numpy as np
 from matplotlib.cm import ScalarMappable
 from numpy import linspace
+import pandas as pd
 
 from tree_extraction import extract_crowns_from_dhm
 from neighborhood_funcs import *
 from pattern_generation import *
 np.random.seed(0)
 
-figname = 'scatter_disorder'
-figname2 = 'distance_disorder'
+figname = 'scatter_disorder_simple'
+figname2 = 'distance_disorder_simple'
 
 pet_radius = 40
 pet_gradient = 0.05
@@ -34,7 +37,17 @@ params = []
 working = square_grid
 working = peturb_gradational(working, pet_gradient, pet_radius)
 grids.append(working)
-names.append('Square Grid')
+names.append('Square grid')
+params.append({'neighbor_search_dist': 15,
+               'ka': 3,
+               'coop': 5,
+               'punishment': 1,
+               'punish_out_of_hull': False,
+               'euc': False,
+               'reorientation': None})
+"""
+grids.append(working)
+names.append('Square grid (reorientation)')
 params.append({'neighbor_search_dist': 15,
                'ka': 3,
                'coop': 5,
@@ -42,37 +55,39 @@ params.append({'neighbor_search_dist': 15,
                'punish_out_of_hull': False,
                'euc': False,
                'reorientation': 10e-3})
+"""
 
+"""
 working = rect_grid
 working = peturb_gradational(working, pet_gradient, pet_radius)
 grids.append(working)
-names.append('Rectangular Grid')
+names.append('Rectangular grid')
 params.append({'neighbor_search_dist': 15,
                'ka': 3,
                'coop': 5,
                'punishment': 1,
                'punish_out_of_hull': False,
                'euc': False,
-               'reorientation': 10e-3})
+               'reorientation': 10e-3})"""
 
-working = square_grid
+"""working = square_grid
 working = decimate_grid(working, 0.85)
 working = peturb_gradational(working, pet_gradient, pet_radius)
 grids.append(working)
-names.append('Decimated Square Grid')
+names.append('Decimated square Grid')
 params.append({'neighbor_search_dist': 15,
                'ka': 3,
                'coop': 5,
                'punishment': 1,
                'punish_out_of_hull': False,
                'euc': False,
-               'reorientation': 10e-3})
+               'reorientation': 10e-3})"""
 
 working = rect_grid
 working = wavify_grid(working, 5, 75)
 working = peturb_gradational(working, pet_gradient, pet_radius)
 grids.append(working)
-names.append('Wavy Grid')
+names.append('Wavy grid')
 params.append({'neighbor_search_dist': 15,
                'ka': 3,
                'coop': 5,
@@ -81,25 +96,25 @@ params.append({'neighbor_search_dist': 15,
                'euc': False,
                'reorientation': 10e-3})
 
-working = rect_grid
+"""working = rect_grid
 working = wavify_grid(working, 5, 75)
 working = rotate(working, 45)
 working = wavify_grid(working, 10, 75)
 working = peturb_gradational(working, pet_gradient, pet_radius)
 grids.append(working)
-names.append('Complex Wavy Grid')
+names.append('Complex wavy grid')
 params.append({'neighbor_search_dist': 15,
                'ka': 3,
                'coop': 5,
                'punishment': 1,
                'punish_out_of_hull': False,
                'euc': False,
-               'reorientation': 10e-3})
+               'reorientation': 10e-3})"""
 
 working = concentric_circles(12, 0.5, 8)
 working = peturb_gradational(working, pet_gradient, pet_radius)
 grids.append(working)
-names.append('Concentric Cirlces')
+names.append('Concentric circles')
 params.append({'neighbor_search_dist': 12,
                'ka': 3,
                'coop': 5,
@@ -113,7 +128,7 @@ working2 = rotate(large_square_grid, 45)
 working = np.append(working, working2, 0)
 working = peturb_gradational(working, pet_gradient, pet_radius)
 grids.append(working)
-names.append('Overlapping Grid, Rotated')
+names.append('Overlapping grid, rotated')
 params.append({'neighbor_search_dist': 15,
                'ka': 3,
                'coop': 5,
@@ -127,7 +142,7 @@ working2 = translate(rect_grid, 3, 3)
 working = np.append(working, working2, 0)
 working = peturb_gradational(working, pet_gradient, pet_radius)
 grids.append(working)
-names.append('Overlapping Grid, Alternating')
+names.append('Overlapping grid, alternating')
 params.append({'neighbor_search_dist': 15,
                'ka': 3,
                'coop': 5,
@@ -143,7 +158,7 @@ working = np.append(working, working2, 0)
 working = np.append(working, working3, 0)
 working = peturb_gradational(working, pet_gradient, pet_radius)
 grids.append(working)
-names.append('Triply Overlapping Grid')
+names.append('Triply overlapping grid')
 params.append({'neighbor_search_dist': 15,
                'ka': 3,
                'coop': 5,
@@ -152,25 +167,36 @@ params.append({'neighbor_search_dist': 15,
                'euc': False,
                'reorientation': 10e-3})
 
-working = large_square_grid
+"""working = large_square_grid
 working2 = rotate(large_square_grid, 45)
 working2 = translate(working2, 2.5, 2.5)
 working = np.append(working, working2, 0)
 working = peturb_gradational(working, pet_gradient, pet_radius)
 grids.append(working)
-names.append('Overlapping Grid, Translated and Rotated')
+names.append('Overlapping grid, translated and rotated')
 params.append({'neighbor_search_dist': 15,
                'ka': 3,
                'coop': 5,
                'punishment': 1,
                'punish_out_of_hull': False,
                'euc': False,
-               'reorientation': 10e-3})
+               'reorientation': 10e-3})"""
 
-working = stamp_pattern(stamp, 8, 8, 100, 100, flip=False, rotate_by=2)
+"""working = stamp_pattern(stamp, 8, 8, 100, 100, flip=False, rotate_by=2)
 working = peturb_gradational(working, pet_gradient, pet_radius)
 grids.append(working)
-names.append('Stamp, Rotated')
+names.append('Stamp, rotated')
+params.append({'neighbor_search_dist': 20,
+               'ka': 3,
+               'coop': 5,
+               'punishment': 1,
+               'punish_out_of_hull': False,
+               'euc': False,
+               'reorientation': None})"""
+
+"""
+grids.append(working)
+names.append('Stamp, rotated (reorientation)')
 params.append({'neighbor_search_dist': 20,
                'ka': 3,
                'coop': 5,
@@ -178,8 +204,9 @@ params.append({'neighbor_search_dist': 20,
                'punish_out_of_hull': False,
                'euc': False,
                'reorientation': 10e-3})
+"""
 
-working = stamp_pattern(stamp, 8, 8, 100, 100, flip=False, rotate_by=0)
+"""working = stamp_pattern(stamp, 8, 8, 100, 100, flip=False, rotate_by=0)
 working = peturb_gradational(working, pet_gradient, pet_radius)
 grids.append(working)
 names.append('Stamp')
@@ -189,7 +216,7 @@ params.append({'neighbor_search_dist': 20,
                'punishment': 1,
                'punish_out_of_hull': False,
                'euc': False,
-               'reorientation': 10e-3})
+               'reorientation': 10e-3})"""
 
 distance_holder = []
 name_holder = []
@@ -201,7 +228,7 @@ for i, (pts, name, pars) in enumerate(zip(grids, names, params)):
     if j == 6:
         j = 0
     if i % 6 == 0:
-        fig, ax = plt.subplots(3, 2, figsize=(24, 24))
+        fig, ax = plt.subplots(3, 2, figsize=(18, 18))
         color_map = cm.get_cmap('RdYlGn_r')
 
     neighbor_search_dist = pars['neighbor_search_dist']
@@ -232,11 +259,15 @@ for i, (pts, name, pars) in enumerate(zip(grids, names, params)):
     c2 = plt.Circle((0, 0), neighbor_search_dist, color='blue', linewidth=2, fill=False)
     fig.axes[j].add_patch(c1)
     fig.axes[j].add_patch(c2)
+    fig.axes[j].set_axis_off()
     # for i,(x,y) in enumerate(pts):
     #    ax.annotate(i, (x, y))
+    """
     fig.axes[j].set_title(f'r={neighbor_search_dist}, km={ka}, coop={coop}\n'
                     f'punishment={punishment}, punish_out_of_hull={punish_out_of_hull}\n'
                     f'euc={euc}, reorientation=None')
+    """
+    fig.axes[j].set_title(string.ascii_uppercase[i])
     fig.axes[j].set_aspect('equal')
 
     """
@@ -261,6 +292,7 @@ for i, (pts, name, pars) in enumerate(zip(grids, names, params)):
     ax[1].set_aspect('equal')
     """
 
+
     if (i+1) % 6 == 0:
         plt.tight_layout()
 
@@ -272,15 +304,27 @@ for i, (pts, name, pars) in enumerate(zip(grids, names, params)):
         plt.close()
         fig.savefig(f'C:\\Users\\rsjon_000\\Documents\\point-disorder\\point_disorder_paper\\figures\\{figname}{i}.png')
 
-fig, ax = plt.subplots(1,1, figsize=(12, 12))
-for i, (name, d, s) in enumerate(zip(name_holder, distance_holder, score_holder)):
-    plt.scatter(d, s, alpha=0.5, label=name)
+
+"""
+colors = ['firebrick', 'coral', 'navy', 'steelblue']
+syms = ['o', 'v', 'o', 'v']
+fig, ax = plt.subplots(1,1, figsize=(10, 10))
+for i, (name, d, s, color, sym) in enumerate(zip(name_holder, distance_holder, score_holder, colors, syms)):
+
+    data = pd.DataFrame({'distance':d,
+                         'score':s})
+    data = data.sort_values('distance')
+    data['smooth'] = data['score'].rolling(75, min_periods=1).mean()
+
+    plt.scatter(data['distance'], data['score'], color=color, marker=sym, alpha=0.4, label=name)
+    plt.plot(data['distance'], data['smooth'], color=color, linewidth=4)
     plt.title('IoD as a function of distance from origin')
     plt.xlabel('Distance from origin')
     plt.ylabel('IoD')
 
 plt.axvline(x=pet_radius, linestyle='--', color='black', label='Perturbation Distance')
 plt.legend()
-
+plt.tight_layout()
 plt.close()
 fig.savefig(f'C:\\Users\\rsjon_000\\Documents\\point-disorder\\point_disorder_paper\\figures\\{figname2}.png')
+"""

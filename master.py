@@ -27,7 +27,7 @@ trees_1 = False
 trees_2 = False
 trees_3 = True
 
-save = False
+save = True
 sensitivity = False
 
 if use_dhm:
@@ -397,7 +397,7 @@ if sensitivity:
 
         num_points[r] = len(good_scores)
 
-    fig, ax = plt.subplots(2, 1, figsize=(16,8))
+    fig, ax = plt.subplots(2, 1, figsize=(12,6))
     ax[0].plot(radii, num_points, marker='o')
     ax[0].set_xlim([0,max(radii)+5])
     ax[1].plot(radii, num_neighbors, marker='o')
@@ -433,7 +433,7 @@ else:
     norm = plt.Normalize(0, 1)
     sm = ScalarMappable(norm=norm, cmap=color_map)
     if use_dhm:
-        fig, ax = plt.subplots(1, 2, figsize=(32, 24))
+        fig, ax = plt.subplots(1, 2, figsize=(16, 12))
         if trees_3:
             ax[0].imshow(sub_image_gray, cmap='gray', extent=(0, (im_ylim[1]-im_ylim[0])*.3048, (im_xlim[1]-im_xlim[0])*.3048, 0))
             ax[1].imshow(sub_image_gray, cmap='gray', extent=(0, (im_ylim[1]-im_ylim[0])*.3048, (im_xlim[1]-im_xlim[0])*.3048, 0))
@@ -513,7 +513,7 @@ else:
         cbar.ax.set_title('IoD')
 
     else:
-        fig, ax = plt.subplots(1, 1, figsize=(16, 12))
+        fig, ax = plt.subplots(1, 1, figsize=(12, 8))
         ax.scatter(pts[:, 0], pts[:, 1], c=scores, cmap=color_map, vmin=0, vmax=1, edgecolors='black')
         # for i,(x,y) in enumerate(pts):
         #    ax.annotate(i, (x, y))
